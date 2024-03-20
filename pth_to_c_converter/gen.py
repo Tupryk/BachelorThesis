@@ -80,5 +80,5 @@ def exportNet(pth_path):
 
 
 if __name__ == '__main__':
-	path = "../models/jana_nn.pth"
+	path = "../pth_models/jana_nn.pth"
 	exportNet(path)
