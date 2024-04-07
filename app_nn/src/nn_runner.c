@@ -1,6 +1,6 @@
 #include <string.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -13,6 +13,7 @@
 #define DEBUG 1
 #include "debug.h"
 
+#include "input_state.h"
 #include "nn.h"
 
 uint64_t start_time, end_time;
@@ -28,15 +29,14 @@ void appMain()
 
         // main loop //
         float input[INPUT_SIZE];
-        for (int i = 0; i < INPUT_SIZE; i++) {
-            input[i] = ((float)rand() / RAND_MAX) * 2 - 1;
-        }
+        load_input_vector(input);
         const float *output = nn_forward(input);
         // --------- //
 
         end_time = usecTimestamp();
 
         #if DEBUG
+        // Display outputs
         DEBUG_PRINT("==================================================\n");
         double elapsed_time = end_time-start_time;
         double hz = 1000.0/elapsed_time;

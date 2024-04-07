@@ -1,3 +1,4 @@
 obj-y += nn_runner.o
 obj-y += nn_utils.o
 obj-y += nn.o
+obj-y += input_state.o
