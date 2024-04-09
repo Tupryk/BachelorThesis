@@ -5,7 +5,7 @@
 
 int main()
 {
-	float input[INPUT_SIZE] = { .0, .0, .5, .0, .0, .0, .1, 3., .5, .1, .4, 1.9 };
+	float input[INPUT_SIZE] = { .1, -1., 3.5, -.05, -2., .04, .14, 0.1, 2.5, -.1, .4, 0.9 };
 	const float* output = nn_forward(input);
 	for (int i = 0; i < OUTPUT_SIZE; i++) {
 		printf("%f\n", output[i]);
