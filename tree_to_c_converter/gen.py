@@ -35,7 +35,8 @@ def exportTree(model_path):
 
 	gen_file = open('tree.c', 'w')
 	gen_file.write(f"// GENERATED FILE FROM MODEL {model_path}\n")
-	gen_file.write(f'#include "tree.h"\n\n\n')
+	gen_file.write(f'#include "tree.h"\n')
+	gen_file.write(f'#include "tree_utils.h"\n\n\n')
 
 	values = ["left_children", "right_children", "split_indices", "split_conditions"]
 
@@ -57,29 +58,14 @@ def exportTree(model_path):
 			result += f"	.{v}_{i} = {arr2cstr(np.array(tree[v]))},\n"
 	result += "};\n\n"
 
-	result += f"float tranverse_tree(int* left_children, int* right_children, int* split_indices, float* split_conditions, float input[INPUT_SIZE])\n{{\n"
-	result += "	int prev_index = 0;\n"
-	result += "	int index = 0;\n"
-	result += "	while (index != -1)\n"
-	result += "	{\n"
-	result += "		prev_index = index;\n"
-	result += "		if (split_conditions[index] < input[split_indices[index]]) {\n"
-	result += "			index = left_children[index];\n"
-	result += "		} else {\n"
-	result += "			index = right_children[index];\n"
-	result += "		}\n"
-	result += "	}\n"
-	result += "	return split_conditions[prev_index];\n"
-	result += "}\n\n"
-
 	result += "void tree_forward(float input[INPUT_SIZE], float output[OUTPUT_SIZE]) {\n"
 	for i in range(OUTPUT_SIZE):
-		result += f"		output[{i}] = 0;\n"
+		result += f"	output[{i}] = 0;\n"
 
 		for j in range(i, len(trees_list), OUTPUT_SIZE):
-			result += f"		output[{i}] += tranverse_tree({exportname}.left_children_{j}, {exportname}.right_children_{j}, {exportname}.split_indices_{j}, {exportname}.split_conditions_{j}, input);\n"
+			result += f"	output[{i}] += tranverse_tree({exportname}.left_children_{j}, {exportname}.right_children_{j}, {exportname}.split_indices_{j}, {exportname}.split_conditions_{j}, input);\n"
 
-		result += f"		output[{i}] /= {len(trees_list)}/OUTPUT_SIZE;"
+		result += f"	output[{i}] /= {len(trees_list)}/OUTPUT_SIZE;\n"
 	result += "}\n"
 
 	gen_file.write(result)
