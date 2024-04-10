@@ -1,3 +1,4 @@
+import rowan
 import torch
 import cfusdlog
 import numpy as np
@@ -5,12 +6,34 @@ from sklearn.utils import shuffle
 from residual_calculation import residual
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from config.multirotor_config import MultirotorConfig
-from torch.utils.data import TensorDataset, DataLoader
 
+# timestamp
+# stateEstimate.x
+# stateEstimate.y
+# stateEstimate.z
+# stateEstimate.qx
+# stateEstimate.qy
+# stateEstimate.qz
+# stateEstimate.qw
+# stateEstimate.vx
+# stateEstimate.vy
+# stateEstimate.vz
+# gyro.x
+# gyro.y
+# gyro.z
+# acc.x
+# acc.y
+# acc.z
+# rpm.m1
+# rpm.m2
+# rpm.m3
+# rpm.m4
+# pwm.m1_pwm
+# pwm.m2_pwm
+# pwm.m3_pwm
+# pwm.m4_pwm
+# pm.vbatMV
 
-d2r = MultirotorConfig.deg2rad
-g = MultirotorConfig.GRAVITATION
 
 def decode_data(path):
     data_usd = cfusdlog.decode(path)
@@ -26,12 +49,22 @@ def train_test_data(keys=[]):
         x = []
         if len(keys):
             for key in keys:
-                x.append(data[key][1:])
+                if key != "rotmat":
+                    x.append(data[key][1:])
+                else:
+                    r = []
+                    for j in range(1, len(data['timestamp'])):
+                        R = rowan.to_matrix(np.array([data['stateEstimate.qw'][j],data['stateEstimate.qx'][j], data['stateEstimate.qy'][j], data['stateEstimate.qz'][j]]))[:,:2]
+                        R = R.reshape(1, 6)[0]
+                        r.append(R)
+                    r = np.array(r).T
+                    for rr in r: # Kind of ugly but works
+                        x.append(rr)
         else:
             for key in data.keys():
                 if key != "timestamp":
                     x.append(data[key][1:])
-        
+
         x = np.vstack(x).T
         for i in x:
             X.append(i)
@@ -51,13 +84,7 @@ def train_test_data(keys=[]):
 
     X_train = torch.from_numpy(X_train)
     y_train = torch.from_numpy(y_train)
-    
     X_test = torch.from_numpy(X_test)
     y_test = torch.from_numpy(y_test)
 
-    train_dataset = TensorDataset(X_train, y_train)
-    test_dataset = TensorDataset(X_test, y_test)
-
-    train_dataloader = DataLoader(train_dataset, batch_size=64)
-    test_dataloader = DataLoader(test_dataset, batch_size=64)
-    return train_dataloader, test_dataloader, X_test, y_test
+    return X_train, y_train, X_test, y_test
