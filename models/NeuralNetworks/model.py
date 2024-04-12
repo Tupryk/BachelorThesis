@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_size=25, hidden_size=15,  output_size=6):
+    def __init__(self, input_size=12, hidden_size=15,  output_size=6):
         super(NeuralNetwork, self).__init__()
 
         self.input_size = input_size
@@ -61,7 +61,7 @@ class NeuralNetwork(nn.Module):
     def train_model(self, train_dataloader, test_dataloader):
 
         self.double()
-        epoch = 20
+        epoch = 30
         optimizer = torch.optim.Adam(self.parameters(), lr=0.0035)
 
         loss_fn = nn.MSELoss()

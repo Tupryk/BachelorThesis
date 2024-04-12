@@ -76,15 +76,17 @@ def train_test_data(keys=[]):
     X = np.vstack(X)
     y = np.vstack(y)
     X, y = shuffle(X, y, random_state=42)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    minmax_scaler = MinMaxScaler(feature_range=(-1, 1))
-    X = minmax_scaler.fit_transform(X)
-    y = minmax_scaler.fit_transform(y)
+    minmax_scaler_input = MinMaxScaler(feature_range=(-1, 1))
+    minmax_scaler_output = MinMaxScaler(feature_range=(-1, 1))
+    #X = minmax_scaler_input.fit_transform(X)
+    y = minmax_scaler_output.fit_transform(y)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     X_train = torch.from_numpy(X_train)
     y_train = torch.from_numpy(y_train)
     X_test = torch.from_numpy(X_test)
     y_test = torch.from_numpy(y_test)
 
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, minmax_scaler_output

@@ -4,7 +4,7 @@ from NeuralNetworks.model import NeuralNetwork
 from torch.utils.data import TensorDataset, DataLoader
 
 
-X_train, y_train, X_test, y_test = train_test_data()
+X_train, y_train, X_test, y_test, minmax_scaler_output = train_test_data(["rotmat", "acc.x", "acc.y", "acc.z", "gyro.x", "gyro.y", "gyro.z"])
 train_dataset = TensorDataset(X_train, y_train)
 test_dataset = TensorDataset(X_test, y_test)
 
@@ -20,5 +20,10 @@ for i in range(len(y_test)):
     pred_arr.append(pred.cpu().detach().numpy())
 pred_arr = np.array(pred_arr)
 y_test = np.array(y_test)
-err = pred_arr-y_test
-print(sum(err)/len(err))
+
+pred_arr = minmax_scaler_output.inverse_transform(pred_arr)
+y_test = minmax_scaler_output.inverse_transform(y_test)
+
+error_f = np.abs(y_test-pred_arr)[:,:3]
+print(f"f error rows: {np.mean(error_f, axis = 0 )}")
+print(f"overall error f: {np.mean(error_f)}")
