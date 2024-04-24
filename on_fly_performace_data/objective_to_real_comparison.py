@@ -9,6 +9,8 @@ traj.loadcsv("./figure8.csv")
 
 traj.stretchtime(2)
 
+data_paths = ['./data/controller_lee_only_force_no_scaling', './data/only_force_scaled', './data/standard_controller_2']
+
 ts = np.arange(0, traj.duration, 0.01)
 evals = np.empty((len(ts), 15))
 for t, i in zip(ts, range(0, len(ts))):
@@ -16,12 +18,17 @@ for t, i in zip(ts, range(0, len(ts))):
     e.pos += np.array([0, 0, 1])
     evals[i, 0:3] = e.pos
 
-data = cfusdlog.decode('./log06')['fixedFrequency']
-x = [i for i in data["stateEstimate.x"]]
-y = [i for i in data["stateEstimate.y"]]
-z = [i for i in data["stateEstimate.z"]]
-ax = plt.axes(projection="3d")
-ax.plot(evals[:, 0], evals[:, 1], evals[:, 2])
-ax.plot(x, y, z)
+plt.plot(evals[:, 0], evals[:, 1], label="Goal path")
+
+for data_path in data_paths:
+    data = cfusdlog.decode(data_path)['fixedFrequency']
+
+    x = [i for i in data["stateEstimate.x"]]
+    y = [i for i in data["stateEstimate.y"]]
+    # z = [i for i in data["stateEstimate.z"]]
+    label = data_path.replace("./data/", "").replace("_", " ")
+    plt.plot(x, y, label=label)
+
+plt.legend()
 plt.axis('equal')
 plt.show()

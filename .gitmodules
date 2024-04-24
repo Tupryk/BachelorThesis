@@ -2,3 +2,4 @@
 	path = crazyflie-firmware
 	url = ../crazyflie-firmware.git
     branch = upstream_lee
+    
