@@ -26,8 +26,8 @@ for t, i in zip(ts, range(0, len(ts))):
 plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
 
 ### Recorded data ###
-data_paths = ["./slow/lee/log00", "./slow/nnscaledwithtorques/log00"]
-labels = ["Standard Lee controller", "Lee ctrl. + NN"]
+data_paths = ["./fast/lee/log02", "./fast/scaled/log00", "./fast/nn_log00"]
+labels = ["Standard Lee controller", "Lee ctrl. + NN old", "Lee ctrl. + NN new"]
 
 for i, data_path in enumerate(data_paths):
     data = cfusdlog.decode(data_path)['fixedFrequency']

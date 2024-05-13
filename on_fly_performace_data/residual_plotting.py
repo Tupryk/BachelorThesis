@@ -1,5 +1,4 @@
 import cfusdlog
-import numpy as np
 import matplotlib.pyplot as plt
 from residual_calculation import residual
 
@@ -14,7 +13,7 @@ f, tau = residual(data)
 fig, axs = plt.subplots(3, 1, figsize=(8, 6))
 for i, v in enumerate(["x", "y", "z"]):
     axs[i].plot(timestamp, data[f"nn_output.f_{v}"][1:], label="residual prediction")
-    axs[i].plot(timestamp, f[:, i], label="residual")
+    axs[i].plot(timestamp, f[:, i], label=f"Force-{v} residual")
     axs[i].set_title(f"Force-{v} residual")
 plt.tight_layout()
 plt.legend()
