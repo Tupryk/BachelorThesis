@@ -27,7 +27,7 @@ for t, i in zip(ts, range(0, len(ts))):
 plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
 
 ### Recorded data ###
-data_paths = ["./nn_log04"]
+data_paths = ["./new_data/nn_log04"]
 labels = ["Lee ctrl. + NN"]
 
 for i, data_path in enumerate(data_paths):
@@ -47,6 +47,10 @@ for i, data_path in enumerate(data_paths):
     origin = np.array([x[1:], y[1:]]).T
     vector = np.array([f[:, 0], f[:, 1]]).T
     plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1)
+
+    # origin = np.array([x[1:], y[1:]]).T
+    # vector = np.array([data["lee.Fd_x"][1:], data["lee.Fd_y"][1:]]).T
+    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
 
     if THREE_D:
         ax.plot3D(x, y, z, label=labels[i])
