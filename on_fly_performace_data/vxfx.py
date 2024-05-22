@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from residual_calculation import residual
 
 
-data_path = "./nn_log04"
+data_path = "./new_data/nn_log04"
 data = cfusdlog.decode(data_path)['fixedFrequency']
 timestamp = data["timestamp"][1:]
 f, tau = residual(data)
