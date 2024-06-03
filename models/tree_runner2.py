@@ -2,7 +2,7 @@ from data_fetcher import train_test_data
 from sklearn.ensemble import RandomForestRegressor
 
 
-X_train, y_train, X_test, y_test = train_test_data(keys=["gyro.x"])
+X_train, y_train, X_test, y_test, _ = train_test_data(keys=["gyro.x"])
 y_train = y_train[:, :1]
 y_test = y_test[:, :1]
 
@@ -19,3 +19,44 @@ print("Leaf node values:")
 for l in leaf_node_values:
     print(l)
 
+print("Shared values: ")
+not_shared = 0
+shared = 0
+for p in y_pred:
+    if p in leaf_node_values:
+        shared += 1
+    else:
+        not_shared += 1
+
+print("shared: ", shared)
+print("not shared: ", not_shared)
+
+import json
+import xgboost as xg
+from data_fetcher import train_test_data
+import matplotlib.pyplot as plt
+
+eval_set = [(X_train, y_train), (X_test, y_test)]
+
+model = xg.XGBRegressor(n_estimators=1, objective='reg:squarederror')
+model.fit(X_train, y_train, eval_set=eval_set)
+model.save_model('./forest.json')
+xg.plot_tree(model)
+plt.savefig("tree.jpg", dpi=1000)
+
+data = json.load(open('./forest.json', "r"))
+trees_list = data["learner"]["gradient_booster"]["model"]["trees"]
+leaf_node_values = trees_list[0]["split_conditions"]
+
+y_pred = model.predict(X_test)
+print("Shared values: ")
+not_shared = 0
+shared = 0
+for p in y_pred:
+    if p in leaf_node_values:
+        shared += 1
+    else:
+        not_shared += 1
+
+print("shared: ", shared)
+print("not shared: ", not_shared)
