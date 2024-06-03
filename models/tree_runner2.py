@@ -32,6 +32,7 @@ print("shared: ", shared)
 print("not shared: ", not_shared)
 
 import json
+import numpy as np
 import xgboost as xg
 from data_fetcher import train_test_data
 import matplotlib.pyplot as plt
@@ -53,10 +54,12 @@ print("Shared values: ")
 not_shared = 0
 shared = 0
 for p in y_pred:
-    if p in leaf_node_values:
-        shared += 1
-    else:
-        not_shared += 1
+    for i, l in enumerate(leaf_node_values):
+        if np.abs(p - l) < 1e-6:
+            shared += 1
+            break
+        if i == len(leaf_node_values)-1:
+            not_shared += 1
 
 print("shared: ", shared)
 print("not shared: ", not_shared)
