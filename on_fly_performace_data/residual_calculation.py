@@ -32,6 +32,25 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
     return u
 
 
+def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
+    rpm2radseg = 0.10472
+    w = np.array([rpm_1, rpm_2, rpm_3, rpm_4]) * rpm2radseg
+    print(w)
+    w *= w
+    print(w)
+    l = MultirotorConfig.DISTANCE_ARM
+    t2t = MultirotorConfig.t2t
+    B0 = np.array([
+        [1, 1, 1, 1],
+        [0, l, 0, -l],
+        [-l, 0, l, 0],
+        [t2t, -t2t, t2t, -t2t]
+    ])
+
+    u = B0 @ w
+    return u
+
+
 def angular_acceleration(a_vel, prev_a_vel, prev_time, time):
     t = (time - prev_time) * ms2s
     a_acc = (a_vel-prev_a_vel)/t

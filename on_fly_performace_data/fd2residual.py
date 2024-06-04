@@ -9,7 +9,7 @@ timestamp = data["timestamp"][1:]
 
 f, _ = residual(data)
 
-residuals = [np.linalg.norm(f_[:2]) for f_ in f]
+residuals = [np.linalg.norm(f_[:2])*-10 for f_ in f]
 plt.plot(timestamp, residuals, label="Residual")
 
 F_d = [np.sqrt(data["lee.Fd_x"][i]**2 + data["lee.Fd_y"][i]**2) for i, _ in enumerate(data["lee.Fd_x"])][1:]

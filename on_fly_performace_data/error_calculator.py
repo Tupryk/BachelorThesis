@@ -24,35 +24,34 @@ for t, i in zip(ts, range(0, len(ts))):
     e.pos += np.array([0, 0, 1])
     evals[i, 0:3] = e.pos
 
-plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
+target_xs = evals[:, 0]
+target_ys = evals[:, 1]
+plt.plot(target_xs, target_ys, label="Desired path")
 
 ### Recorded data ###
-# data_paths = ["./new_data/nn_log04"]
-# labels = ["Lee ctrl. + NN"]
-data_paths = ["../flight_data/jana00"]
-labels = ["jana00"]
+data_paths = ["./new_data/nn_log04"]
+labels = ["Lee ctrl. + NN"]
 
 for i, data_path in enumerate(data_paths):
     data = cfusdlog.decode(data_path)['fixedFrequency']
-    print(data.keys())
-
-    f, _ = residual(data)
 
     x = [i for i in data["stateEstimate.x"]]
     y = [i for i in data["stateEstimate.y"]]
     z = [i-1. for i in data["stateEstimate.z"]]
 
-    # origin = np.array([x, y]).T
-    # vector = np.array([data["nn_output.f_x"], data["nn_output.f_y"]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Predicted residual forces")
+    origin = np.array([x, y]).T
+    x_ = [target_xs[int(j/len(x)*len(target_xs))]-x[j] for j, _, in enumerate(x)]
+    y_ = [target_ys[int(j/len(x)*len(target_xs))]-y[j] for j, _, in enumerate(x)]
+    z_ = [-z[j] for j, _, in enumerate(x)]
 
-    origin = np.array([x[1:], y[1:]]).T
-    vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="Residual forces")
+    vector = np.array([x_, y_]).T
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
 
-    # origin = np.array([x[1:], y[1:]]).T
-    # vector = np.array([data["lee.Fd_x"][1:], data["lee.Fd_y"][1:]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
+    acumulated_error = 0
+    for j, _ in enumerate(x_):
+        acumulated_error += np.sqrt(x_[j]*x_[j]+y_[j]*y_[j]+z_[j]*z_[j])
+    print("Acumulated error: ", acumulated_error)
+    print("Medium error: ", acumulated_error/len(x_))
 
     if THREE_D:
         ax.plot3D(x, y, z, label=labels[i])
