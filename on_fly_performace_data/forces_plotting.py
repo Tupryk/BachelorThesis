@@ -36,8 +36,6 @@ for i, data_path in enumerate(data_paths):
     data = cfusdlog.decode(data_path)['fixedFrequency']
     print(data.keys())
 
-    f, _ = residual(data)
-
     x = [i for i in data["stateEstimate.x"]]
     y = [i for i in data["stateEstimate.y"]]
     z = [i-1. for i in data["stateEstimate.z"]]
@@ -46,9 +44,15 @@ for i, data_path in enumerate(data_paths):
     # vector = np.array([data["nn_output.f_x"], data["nn_output.f_y"]]).T
     # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Predicted residual forces")
 
+    f, _ = residual(data, new_acc=False)
     origin = np.array([x[1:], y[1:]]).T
     vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="Residual forces")
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.3, label="Residual forces quad acc")
+
+    f, _ = residual(data, new_u0=True)
+    origin = np.array([x[1:], y[1:]]).T
+    vector = np.array([f[:, 0], f[:, 1]]).T
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.3, label="Residual forces world acc")
 
     # origin = np.array([x[1:], y[1:]]).T
     # vector = np.array([data["lee.Fd_x"][1:], data["lee.Fd_y"][1:]]).T

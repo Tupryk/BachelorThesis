@@ -33,22 +33,9 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
 
 
 def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
-    rpm2radseg = 0.10472
-    w = np.array([rpm_1, rpm_2, rpm_3, rpm_4]) * rpm2radseg
-    print(w)
-    w *= w
-    print(w)
-    l = MultirotorConfig.DISTANCE_ARM
-    t2t = MultirotorConfig.t2t
-    B0 = np.array([
-        [1, 1, 1, 1],
-        [0, l, 0, -l],
-        [-l, 0, l, 0],
-        [t2t, -t2t, t2t, -t2t]
-    ])
-
-    u = B0 @ w
-    return u
+    rpm = sum([rpm_1, rpm_2, rpm_3, rpm_4])/4.
+    u0 = np.polyval([ 2.40375893e-08 -3.74657423e-05 -7.96100617e-02], rpm)
+    return u0
 
 
 def angular_acceleration(a_vel, prev_a_vel, prev_time, time):
@@ -68,7 +55,7 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data):
+def residual(data, new_acc=True, new_u0=False):
 
     start_time = data['timestamp'][0]
     m = MultirotorConfig.MASS
@@ -88,15 +75,25 @@ def residual(data):
                           data['gyro.z'][i]])*d2r
         prev_a_vel = a_vel = np.array(
             [data['gyro.x'][i-1], data['gyro.y'][i-1], data['gyro.z'][i-1]])*d2r
-        acc = np.array([data['acc.x'][i], data['acc.y'][i],
-                        data['acc.z'][i]-1])*g
 
         quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
                          data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
         R = rowan.to_matrix(quat)
+        
+        if new_acc:
+            acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+            acc[2] += 1. # ???
+            acc *= g
+        else:
+            acc = np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]-1])*g
+
         u = thrust_torque(pwm_1[i], pwm_2[i], pwm_3[i], pwm_4[i], mv[i])
         a_acc = angular_acceleration(a_vel, prev_a_vel, prev_time, time)
-        f_u = np.array([0, 0, u[0]])
+        if new_u0:
+            u0 = thrust_torque_rpm(data['rpm.m1'][i], data['rpm.m2'][i], data['rpm.m3'][i], data['rpm.m4'][i])
+            f_u = np.array([0, 0, u0])
+        else:
+            f_u = np.array([0, 0, u[0]])
         f_a = disturbance_forces(m, acc, R, f_u)
         f.append(f_a)
         tau_u = np.array([u[1], u[2], u[3]])
