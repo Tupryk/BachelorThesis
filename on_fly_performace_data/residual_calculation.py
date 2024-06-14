@@ -14,18 +14,24 @@ g2N = MultirotorConfig.g2N
 
 
 def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
-    f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
-    f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
-    f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
-    f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+    # f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
+    # f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
+    # f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
+    # f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+
+    f_1 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_1)
+    f_2 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_2)
+    f_3 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_3)
+    f_4 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_4)
+
     l = MultirotorConfig.DISTANCE_ARM
     arm = MultirotorConfig.ARM
     t2t = MultirotorConfig.t2t
     B0 = np.array([
         [1, 1, 1, 1],
-        [0, l, 0, -l],
+        [0, -l, 0, l],
         [-l, 0, l, 0],
-        [t2t, -t2t, t2t, -t2t]
+        [-t2t, t2t, -t2t, t2t]
     ])
 
     u = B0 @ np.array([f_1, f_2, f_3, f_4])
@@ -33,8 +39,15 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
 
 
 def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
-    rpm = sum([rpm_1, rpm_2, rpm_3, rpm_4])/4.
-    u0 = np.polyval([ 2.40375893e-08 -3.74657423e-05 -7.96100617e-02], rpm)
+    # rpm = sum([rpm_1, rpm_2, rpm_3, rpm_4])/4.
+    u0 = 0
+    
+    nums = [2.40375893e-08, -3.74657423e-05, -7.96100617e-02]
+    u0 += np.polyval(nums, rpm_1)
+    u0 += np.polyval(nums, rpm_2)
+    u0 += np.polyval(nums, rpm_3)
+    u0 += np.polyval(nums, rpm_4)
+
     return u0
 
 
@@ -55,19 +68,18 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data, new_acc=True, new_u0=False):
+def residual(data, rpm=False):
 
     start_time = data['timestamp'][0]
-    m = MultirotorConfig.MASS
     f = []
     tau = []
     prev_time = start_time
 
-    pwm_1 = preprocessing.normalize(data['pwm.m1_pwm'][None])[0]
-    pwm_2 = preprocessing.normalize(data['pwm.m2_pwm'][None])[0]
-    pwm_3 = preprocessing.normalize(data['pwm.m3_pwm'][None])[0]
-    pwm_4 = preprocessing.normalize(data['pwm.m4_pwm'][None])[0]
-    mv = preprocessing.normalize(data['pm.vbatMV'][None])[0]
+    pwm_1 = data['pwm.m1_pwm']
+    pwm_2 = data['pwm.m2_pwm']
+    pwm_3 = data['pwm.m3_pwm']
+    pwm_4 = data['pwm.m4_pwm']
+    mv = data['pm.vbatMV']
 
     for i in range(1, len(data['timestamp'])):
         time = data['timestamp'][i]
@@ -80,16 +92,13 @@ def residual(data, new_acc=True, new_u0=False):
                          data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
         R = rowan.to_matrix(quat)
         
-        if new_acc:
-            acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
-            acc[2] += 1. # ???
-            acc *= g
-        else:
-            acc = np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]-1])*g
+        acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+        acc[2] -= 1.
+        acc *= g
 
         u = thrust_torque(pwm_1[i], pwm_2[i], pwm_3[i], pwm_4[i], mv[i])
         a_acc = angular_acceleration(a_vel, prev_a_vel, prev_time, time)
-        if new_u0:
+        if rpm:
             u0 = thrust_torque_rpm(data['rpm.m1'][i], data['rpm.m2'][i], data['rpm.m3'][i], data['rpm.m4'][i])
             f_u = np.array([0, 0, u0])
         else:
@@ -104,3 +113,31 @@ def residual(data, new_acc=True, new_u0=False):
     tau = np.array(tau)
 
     return f, tau
+
+def residual_v2(data):
+    K_af = np.array([
+        [-10.2506, -0.3177,  -0.4332],
+        [-0.3177,  -10.2506, -0.4332],
+        [-7.7050,  -7.7050,  -7.5530]
+    ]) * 10**-7
+
+    f = []
+    for i in range(1, len(data['timestamp'])):
+        quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
+                            data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
+        R = rowan.to_matrix(quat)
+
+        vel = np.array([
+            data['stateEstimate.vx'][i],
+            data['stateEstimate.vy'][i],
+            data['stateEstimate.vz'][i]])
+        
+        theta = 0
+        for n in range(1, 5):
+            theta += np.abs(data[f'rpm.m{n}'][i]*0.10472)
+        
+        f_ = R @ (K_af * theta @ R.T @ vel)
+        f.append(f_)
+
+    f = np.array(f)
+    return f, []
