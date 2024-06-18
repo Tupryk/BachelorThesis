@@ -1,8 +1,8 @@
+import rowan
 import numpy as np
 from multirotor_config import MultirotorConfig
-import rowan
-from sklearn import preprocessing
 
+RPM2RADSEG = .10472
 ms2s = MultirotorConfig.ms2s
 g = MultirotorConfig.GRAVITATION
 d2r = MultirotorConfig.deg2rad
@@ -19,13 +19,13 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
     # f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
     # f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
 
-    f_1 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_1)
-    f_2 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_2)
-    f_3 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_3)
-    f_4 = np.polyval([1.65049399e-09, 9.44396129e-05, -3.77748052e-01], pwm_4)
+    poly_vals = [1.65049399e-09, 9.44396129e-05, -3.77748052e-01]
+    f_1 = np.polyval(poly_vals, pwm_1)
+    f_2 = np.polyval(poly_vals, pwm_2)
+    f_3 = np.polyval(poly_vals, pwm_3)
+    f_4 = np.polyval(poly_vals, pwm_4)
 
     l = MultirotorConfig.DISTANCE_ARM
-    arm = MultirotorConfig.ARM
     t2t = MultirotorConfig.t2t
     B0 = np.array([
         [1, 1, 1, 1],
@@ -39,7 +39,6 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
 
 
 def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
-    # rpm = sum([rpm_1, rpm_2, rpm_3, rpm_4])/4.
     u0 = 0
     
     nums = [2.40375893e-08, -3.74657423e-05, -7.96100617e-02]
@@ -68,38 +67,32 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data, rpm=False):
+def residual(data, use_rpm=True):
 
     start_time = data['timestamp'][0]
     f = []
     tau = []
     prev_time = start_time
 
-    pwm_1 = data['pwm.m1_pwm']
-    pwm_2 = data['pwm.m2_pwm']
-    pwm_3 = data['pwm.m3_pwm']
-    pwm_4 = data['pwm.m4_pwm']
-    mv = data['pm.vbatMV']
-
     for i in range(1, len(data['timestamp'])):
         time = data['timestamp'][i]
         a_vel = np.array([data['gyro.x'][i], data['gyro.y'][i],
                           data['gyro.z'][i]])*d2r
-        prev_a_vel = a_vel = np.array(
+        prev_a_vel = np.array(
             [data['gyro.x'][i-1], data['gyro.y'][i-1], data['gyro.z'][i-1]])*d2r
 
         quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
                          data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
         R = rowan.to_matrix(quat)
         
-        acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+        acc = R.T @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
         acc[2] -= 1.
         acc *= g
 
-        u = thrust_torque(pwm_1[i], pwm_2[i], pwm_3[i], pwm_4[i], mv[i])
+        u = thrust_torque(*[data[f'pwm.m{j}_pwm'][i] for j in range(1, 5)], data['pm.vbatMV'][i])
         a_acc = angular_acceleration(a_vel, prev_a_vel, prev_time, time)
-        if rpm:
-            u0 = thrust_torque_rpm(data['rpm.m1'][i], data['rpm.m2'][i], data['rpm.m3'][i], data['rpm.m4'][i])
+        if use_rpm:
+            u0 = thrust_torque_rpm(*[data[f'rpm.m{j}'][i] for j in range(1, 5)])
             f_u = np.array([0, 0, u0])
         else:
             f_u = np.array([0, 0, u[0]])
@@ -124,8 +117,8 @@ def residual_v2(data):
     f = []
     for i in range(1, len(data['timestamp'])):
         quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
-                            data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
-        R = rowan.to_matrix(quat)
+                         data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
+        R = rowan.to_matrix(quat) # the rotation of the body frame with respect to the inertial frame (???)
 
         vel = np.array([
             data['stateEstimate.vx'][i],
@@ -134,7 +127,7 @@ def residual_v2(data):
         
         theta = 0
         for n in range(1, 5):
-            theta += np.abs(data[f'rpm.m{n}'][i]*0.10472)
+            theta += np.abs(data[f'rpm.m{n}'][i]*RPM2RADSEG)
         
         f_ = R @ (K_af * theta @ R.T @ vel)
         f.append(f_)

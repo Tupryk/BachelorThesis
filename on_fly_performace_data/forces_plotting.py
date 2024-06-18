@@ -44,20 +44,20 @@ for i, data_path in enumerate(data_paths):
     # vector = np.array([data["nn_output.f_x"], data["nn_output.f_y"]]).T
     # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Predicted residual forces")
 
-    # f, _ = residual(data)
-    # origin = np.array([x[1:], y[1:]]).T
-    # vector = np.array([f[:, 0], f[:, 1]]).T*1e-2
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.3, label="Residual pwm")
-
-    f, _ = residual_v2(data)
-    origin = np.array([x[1:], y[1:]]).T
-    vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.3, label="Residual v2")
-
-    f, _ = residual(data, rpm=True)
+    f, _ = residual(data, use_rpm=False)
     origin = np.array([x[1:], y[1:]]).T
     vector = np.array([f[:, 0], f[:, 1]]).T*1e-2
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.3, label="Residual rpm")
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.3, label="Residual pwm")
+
+    # f, _ = residual_v2(data)
+    # origin = np.array([x[1:], y[1:]]).T
+    # vector = np.array([f[:, 0], f[:, 1]]).T * 100
+    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.3, label="Residual v2")
+
+    f, _ = residual(data, use_rpm=True)
+    origin = np.array([x[1:], y[1:]]).T
+    vector = np.array([f[:, 0], f[:, 1]]).T*1e-2
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual rpm")
 
     # origin = np.array([x[1:], y[1:]]).T
     # vector = np.array([data["lee.Fd_x"][1:], data["lee.Fd_y"][1:]]).T
