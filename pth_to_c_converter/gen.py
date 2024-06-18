@@ -1,5 +1,7 @@
 import os
+import sys
 import torch
+import subprocess
 import numpy as np
 
 
@@ -16,7 +18,7 @@ def arr2cstr(a):
 
 def exportNet(pth_path):
 	gen_file = open('nn.h', 'w')
-	gen_file.write(f"// GENERATED FILE FROM MODEL {path}\n")
+	gen_file.write(f"// GENERATED FILE FROM MODEL {pth_path}\n")
 	gen_file.write("#ifndef __GEN_NN__\n")
 	gen_file.write("#define __GEN_NN__\n\n")
 
@@ -30,7 +32,7 @@ def exportNet(pth_path):
 
 	gen_file = open('nn.c', 'w')
 	# File info and defines
-	gen_file.write(f"// GENERATED FILE FROM MODEL {path}\n")
+	gen_file.write(f"// GENERATED FILE FROM MODEL {pth_path}\n")
 	gen_file.write(f'#include "nn.h"\n')
 	gen_file.write(f'#include "nn_utils.h"\n\n\n')
 	
@@ -80,5 +82,41 @@ def exportNet(pth_path):
 
 
 if __name__ == '__main__':
-	path = "../pth_models/jana_nn.pth"
-	exportNet(path)
+	# Generate the model
+	print("Generating model c file...")
+	model_path = "../new_model_gen/model.pth"
+	exportNet(model_path)
+
+	# Check if the model outputs match
+	print("Comparing with original...")
+	process = subprocess.Popen('gcc main.c nn.c nn_utils.c -o p', shell=True)
+	process.wait()
+	process = subprocess.Popen('./p', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+	c_output, _ = process.communicate()
+	c_output = c_output.decode('utf-8')
+	c_output = np.array(eval(c_output))
+
+	model_dir = directory = os.path.dirname(model_path)
+	sys.path.append(os.path.join(os.path.dirname(__file__), model_dir)) # Asuming that there exists a model.py in the same folder as the .pth with an MPL class
+	from model import MLP # type: ignore
+	model = MLP()
+	model.load_state_dict(torch.load(model_path))
+	model.double()
+	test_data = np.load(f"./test_data.npz")["array"]
+	tensor_input = torch.from_numpy(test_data).double()
+	py_output = model.forward(tensor_input).detach().numpy()
+
+	same = True
+	for i in range(len(c_output)):
+		for j in range(6):
+			if np.abs(c_output[i][j]-py_output[i][j]) >= 1e-4:
+				same = False
+				break
+		if not same:
+			break
+
+	if same:
+		print("Models give the same outputs!")
+	else:
+		print("Something went wrong, outputs dont match!")
