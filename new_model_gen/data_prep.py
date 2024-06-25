@@ -25,7 +25,7 @@ def feature_label_from_data(data: dict):
     k = np.array([data['acc.x'][1:], data['acc.y'][1:], data['acc.z'][1:], data['gyro.x'][1:], data['gyro.y'][1:],data['gyro.z'][1:]]).T
     features = np.append(k, r, axis=1)
 
-    f_a, tau_a, = residual(data)
+    f_a, tau_a = residual(data)
     labels = np.append(f_a, tau_a, axis=1)
 
     return features, labels
@@ -62,14 +62,6 @@ def prepare_data(file_paths: list, save_as: str="", shuffle_data: bool=True):
     return X, y
 
 def create_dataloader(X: np.ndarray, y: np.ndarray):
-    # print("Mins: ", end="")
-    # for j in range(6):
-    #     print(f"{min(y[:, j]):.7f}, ", end="")
-    # print()
-    # print("Maxs: ", end="")
-    # for j in range(6):
-    #     print(f"{max(y[:, j]):.7f}, ", end="")
-    # print()
 
     X = torch.from_numpy(X)
     y = torch.from_numpy(y)

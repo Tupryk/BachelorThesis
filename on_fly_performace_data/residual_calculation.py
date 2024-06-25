@@ -1,5 +1,6 @@
 import rowan
 import numpy as np
+from sklearn import preprocessing
 from multirotor_config import MultirotorConfig
 
 RPM2RADSEG = .10472
@@ -14,16 +15,16 @@ g2N = MultirotorConfig.g2N
 
 
 def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
-    # f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
-    # f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
-    # f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
-    # f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+    f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
+    f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
+    f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
+    f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
 
-    poly_vals = [1.65049399e-09, 9.44396129e-05, -3.77748052e-01]
-    f_1 = np.polyval(poly_vals, pwm_1)
-    f_2 = np.polyval(poly_vals, pwm_2)
-    f_3 = np.polyval(poly_vals, pwm_3)
-    f_4 = np.polyval(poly_vals, pwm_4)
+    # poly_vals = [1.65049399e-09, 9.44396129e-05, -3.77748052e-01]
+    # f_1 = np.polyval(poly_vals, pwm_1) * g2N
+    # f_2 = np.polyval(poly_vals, pwm_2) * g2N
+    # f_3 = np.polyval(poly_vals, pwm_3) * g2N
+    # f_4 = np.polyval(poly_vals, pwm_4) * g2N
 
     l = MultirotorConfig.DISTANCE_ARM
     t2t = MultirotorConfig.t2t
@@ -39,15 +40,25 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
 
 
 def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
-    u0 = 0
     
     nums = [2.40375893e-08, -3.74657423e-05, -7.96100617e-02]
-    u0 += np.polyval(nums, rpm_1)
-    u0 += np.polyval(nums, rpm_2)
-    u0 += np.polyval(nums, rpm_3)
-    u0 += np.polyval(nums, rpm_4)
+    f_1 = np.polyval(nums, rpm_1)
+    f_2 = np.polyval(nums, rpm_2)
+    f_3 = np.polyval(nums, rpm_3)
+    f_4 = np.polyval(nums, rpm_4)
 
-    return u0
+    l = MultirotorConfig.DISTANCE_ARM
+    t2t = MultirotorConfig.t2t
+    B0 = np.array([
+        [1, 1, 1, 1],
+        [0, -l, 0, l],
+        [-l, 0, l, 0],
+        [-t2t, t2t, -t2t, t2t]
+    ])
+
+    f = np.array([f_1, f_2, f_3, f_4]) * g2N
+    u = B0 @ f
+    return u
 
 
 def angular_acceleration(a_vel, prev_a_vel, prev_time, time):
@@ -67,12 +78,18 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data, use_rpm=True):
+def residual(data, use_rpm=True, rot=False):
 
     start_time = data['timestamp'][0]
     f = []
     tau = []
     prev_time = start_time
+
+    pwm_1 = preprocessing.normalize(data['pwm.m1_pwm'][None])[0]
+    pwm_2 = preprocessing.normalize(data['pwm.m2_pwm'][None])[0]
+    pwm_3 = preprocessing.normalize(data['pwm.m3_pwm'][None])[0]
+    pwm_4 = preprocessing.normalize(data['pwm.m4_pwm'][None])[0]
+    mv = preprocessing.normalize(data['pm.vbatMV'][None])[0]
 
     for i in range(1, len(data['timestamp'])):
         time = data['timestamp'][i]
@@ -85,17 +102,23 @@ def residual(data, use_rpm=True):
                          data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
         R = rowan.to_matrix(quat)
         
-        acc = R.T @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+        if rot:
+            acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+        else:
+            acc = np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+            
         acc[2] -= 1.
         acc *= g
 
-        u = thrust_torque(*[data[f'pwm.m{j}_pwm'][i] for j in range(1, 5)], data['pm.vbatMV'][i])
         a_acc = angular_acceleration(a_vel, prev_a_vel, prev_time, time)
+        
         if use_rpm:
-            u0 = thrust_torque_rpm(*[data[f'rpm.m{j}'][i] for j in range(1, 5)])
-            f_u = np.array([0, 0, u0])
+            u = thrust_torque_rpm(*[data[f'rpm.m{j}'][i] for j in range(1, 5)])
         else:
-            f_u = np.array([0, 0, u[0]])
+            # u = thrust_torque(*[data[f'pwm.m{j}_pwm'][i] for j in range(1, 5)], data['pm.vbatMV'][i])
+            u = thrust_torque(pwm_1[i], pwm_2[i], pwm_3[i], pwm_4[i], mv[i])
+
+        f_u = np.array([0, 0, u[0]])
         f_a = disturbance_forces(m, acc, R, f_u)
         f.append(f_a)
         tau_u = np.array([u[1], u[2], u[3]])
@@ -133,4 +156,4 @@ def residual_v2(data):
         f.append(f_)
 
     f = np.array(f)
-    return f, []
+    return f

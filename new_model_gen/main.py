@@ -12,6 +12,26 @@ file_paths = [f"../flight_data/jana{i}" for i in indices]
 # Prepare data
 X_train, y_train = prepare_data(file_paths, save_as="train_data")
 X_test, y_test = prepare_data(["../flight_data/jana02"], save_as="test_data", shuffle_data=False)
+# X_test, y_test0 = prepare_data(["../flight_data/jana00"], save_as="jana00", shuffle_data=False)
+# X_test, y_test = prepare_data(["../flight_data/jana03"], save_as="jana03", shuffle_data=False)
+
+# fig, ax = plt.subplots(3)
+# ax[0].plot(y_test0[:, 0], label="jana00")
+# ax[0].plot(y_test[:, 0], label="jana03")
+# ax[0].set_title('Force X')
+
+# ax[1].plot(y_test0[:, 1], label="jana00")
+# ax[1].plot(y_test[:, 1], label="jana03")
+# ax[1].set_title('Force Y')
+
+# ax[2].plot(y_test0[:, 2], label="jana00")
+# ax[2].plot(y_test[:, 2], label="jana03")
+# ax[2].set_title('Force Z')
+
+# ax[0].legend()
+# plt.tight_layout()
+# plt.show()
+# exit()
 
 # y_full = np.append(y_train, y_test, axis = 0)
 # minmax_scaler = MinMaxScaler(feature_range=(-1, 1))

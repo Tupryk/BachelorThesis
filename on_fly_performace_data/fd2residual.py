@@ -7,7 +7,7 @@ data_path = "./new_data/nn_log04"
 data = cfusdlog.decode(data_path)['fixedFrequency']
 timestamp = data["timestamp"][1:]
 
-f, _ = residual(data)
+f, _ = residual(data, use_rpm=False)
 
 residuals = [np.linalg.norm(f_[:2])*-10 for f_ in f]
 plt.plot(timestamp, residuals, label="Residual")
