@@ -35,17 +35,17 @@ x = [i for i in data["stateEstimate.x"]]
 y = [i for i in data["stateEstimate.y"]]
 z = [i-1. for i in data["stateEstimate.z"]]
 
+origin = np.array([x[1:], y[1:]]).T
+vector_v = np.array([data["stateEstimate.vx"][1:], data["stateEstimate.vy"][1:]]).T
+scale = .3
+plt.quiver(origin[:,0], origin[:,1], vector_v[:,0] * scale, vector_v[:,1] * scale, angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="velocities")
+
 f, _ = residual(data, use_rpm=False, rot=True)
 origin = np.array([x[1:], y[1:]]).T
-vector_r = np.array([f[:, 0], f[:, 1]]).T
+vector_r = np.array([f[:, 0], f[:, 1]]).T * 5
 plt.quiver(origin[:,0], origin[:,1], vector_r[:,0], vector_r[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="residuals")
 
 plt.plot(x, y, label=label)
-
-origin = np.array([x[1:], y[1:]]).T
-vector_v = np.array([data["stateEstimate.vx"][1:], data["stateEstimate.vy"][1:]]).T
-scale = .5
-plt.quiver(origin[:,0], origin[:,1], vector_v[:,0] * scale, vector_v[:,1] * scale, angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="velocities")
 
 for j in range(len(vector_v)):
     vel = vector_v[j]/np.linalg.norm(vector_v[j])
@@ -59,7 +59,7 @@ for j in range(len(vector_v)):
 
 projections = np.array(projections)
 
-plt.title("Fx and Fy compared to quadrotor trajectory")
+plt.title("Residuals (scaled by 5) and velocities (scaled by .3)")
 plt.legend()
 plt.axis('equal')
 plt.show()
@@ -76,4 +76,16 @@ scale = .1
 plt.quiver(origin[:,0], origin[:,1], projections[:,0] * scale, projections[:,1] * scale, angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label=f"Projected scaled by {scale}")
 plt.title("Comparison between the projection of the residual on the velocity and the Foster drag model")
 plt.legend()
+plt.show()
+
+plt.plot(vector_r[:,0], label="Drag model")
+plt.plot(projections[:,0]*.01, label=f"Projected scaled by {.01}")
+plt.ylim(min(vector_r[:,0]), max(vector_r[:,0]))
+plt.title("projection of the residual on the velocity and drag model (x axis)")
+plt.show()
+
+plt.plot(vector_r[:,1], label="Drag model")
+plt.plot(projections[:,1]*.01, label=f"Projected scaled by {.01}")
+plt.ylim(min(vector_r[:,1]), max(vector_r[:,1]))
+plt.title("projection of the residual on the velocity and drag model (y axis)")
 plt.show()
