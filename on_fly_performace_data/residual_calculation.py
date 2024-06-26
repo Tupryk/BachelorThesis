@@ -47,12 +47,13 @@ def thrust_torque_rpm(rpm_1, rpm_2, rpm_3, rpm_4):
     f_3 = np.polyval(nums, rpm_3)
     f_4 = np.polyval(nums, rpm_4)
 
-    l = MultirotorConfig.DISTANCE_ARM
-    t2t = MultirotorConfig.t2t
+    arm_length = 0.046  # m
+    arm = 0.707106781 * arm_length
+    t2t = 0.006  # thrust-to-torque ratio
     B0 = np.array([
         [1, 1, 1, 1],
-        [0, -l, 0, l],
-        [-l, 0, l, 0],
+        [-arm, -arm, arm, arm],
+        [-arm, arm, arm, -arm],
         [-t2t, t2t, -t2t, t2t]
     ])
 
@@ -106,9 +107,11 @@ def residual(data, use_rpm=True, rot=False):
             acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
         else:
             acc = np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
-            
+            # acc = np.array([data['stateEstimate.ax'][i], data['stateEstimate.ay'][i], data['stateEstimate.az'][i]])
+
         acc[2] -= 1.
         acc *= g
+
 
         a_acc = angular_acceleration(a_vel, prev_a_vel, prev_time, time)
         
