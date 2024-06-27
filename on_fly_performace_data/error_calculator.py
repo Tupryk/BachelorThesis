@@ -27,31 +27,41 @@ for t, i in zip(ts, range(0, len(ts))):
 target_xs = evals[:, 0]
 target_ys = evals[:, 1]
 plt.plot(target_xs, target_ys, label="Desired path")
+# plt.plot(target_xs, label="Desired path")
 
 ### Recorded data ###
-data_paths = ["./new_data/nn_log04"]
-labels = ["Lee ctrl. + NN"]
+# data_paths = [f"./error_calculating/nn/nn_log0{i}" for i in range(10)]
+# data_paths = [f"./error_calculating/lee/nn_log0{i}" for i in range(1, 9)]
+data_paths = [f"./error_calculating/lee/nn_log0{i}" for i in range(1)]
+labels = data_paths
 
+cutoff = 2700
+errors = []
 for i, data_path in enumerate(data_paths):
     data = cfusdlog.decode(data_path)['fixedFrequency']
 
-    x = [i for i in data["stateEstimate.x"]]
-    y = [i for i in data["stateEstimate.y"]]
-    z = [i-1. for i in data["stateEstimate.z"]]
+    x = [i for i in data["stateEstimate.x"]][:cutoff]
+    y = [i for i in data["stateEstimate.y"]][:cutoff]
+    z = [i-1. for i in data["stateEstimate.z"]][:cutoff]
 
     origin = np.array([x, y]).T
     x_ = [target_xs[int(j/len(x)*len(target_xs))]-x[j] for j, _, in enumerate(x)]
     y_ = [target_ys[int(j/len(x)*len(target_xs))]-y[j] for j, _, in enumerate(x)]
     z_ = [-z[j] for j, _, in enumerate(x)]
 
+    # target_xs_adjusted = [target_xs[int(j/len(x)*len(target_xs))] for j, _, in enumerate(x)]
+    # plt.plot(target_xs_adjusted, label="Desired path")
+
     vector = np.array([x_, y_]).T
     plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
 
     acumulated_error = 0
     for j, _ in enumerate(x_):
-        acumulated_error += np.sqrt(x_[j]*x_[j]+y_[j]*y_[j]+z_[j]*z_[j])
+        print(np.linalg.norm(vector))
+        acumulated_error += np.linalg.norm(vector[j])
+    errors.append(acumulated_error/len(x_))
     print("Acumulated error: ", acumulated_error)
-    print("Medium error: ", acumulated_error/len(x_))
+    print("Average error: ", acumulated_error/len(x_))
 
     if THREE_D:
         ax.plot3D(x, y, z, label=labels[i])
@@ -61,7 +71,15 @@ for i, data_path in enumerate(data_paths):
     f, tau = residual(data)
     for j, v in enumerate(["x", "y", "z"]):
         f_j = [f_[j] for f_ in f]
-        print(f"{labels[i]} mean residual f_{v}: {sum(f_j)/len(f_j)}")
+        mean = sum(f_j)/len(f_j)
+        print(f"{labels[i]} mean residual f_{v}: {mean}")
+
+print(errors)
+mean = sum(errors)/len(errors)
+stds = [e - mean for e in errors]
+std = sum(stds)/len(stds)
+print("Mean error (m): ", mean)
+print("Std. deviation (m): ", std)
 
 plt.title("Fx and Fy compared to quadrotor trajectory")
 plt.legend()

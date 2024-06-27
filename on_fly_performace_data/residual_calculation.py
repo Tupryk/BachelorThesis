@@ -79,7 +79,7 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data, use_rpm=True, rot=False):
+def residual(data, use_rpm=False, rot=False):
 
     start_time = data['timestamp'][0]
     f = []
