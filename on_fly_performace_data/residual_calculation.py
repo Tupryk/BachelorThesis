@@ -26,12 +26,13 @@ def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
     # f_3 = np.polyval(poly_vals, pwm_3) * g2N
     # f_4 = np.polyval(poly_vals, pwm_4) * g2N
 
-    l = MultirotorConfig.DISTANCE_ARM
-    t2t = MultirotorConfig.t2t
+    arm_length = 0.046  # m
+    arm = 0.707106781 * arm_length
+    t2t = 0.006  # thrust-to-torque ratio
     B0 = np.array([
         [1, 1, 1, 1],
-        [0, -l, 0, l],
-        [-l, 0, l, 0],
+        [-arm, -arm, arm, arm],
+        [-arm, arm, arm, -arm],
         [-t2t, t2t, -t2t, t2t]
     ])
 
@@ -79,7 +80,7 @@ def disturbance_torques(a_acc, a_vel, tau_u):
     return tau_a
 
 
-def residual(data, use_rpm=False, rot=False):
+def residual(data, use_rpm=False, rot=True):
 
     start_time = data['timestamp'][0]
     f = []
@@ -133,6 +134,28 @@ def residual(data, use_rpm=False, rot=False):
 
     return f, tau
 
+def payload_residual(data):
+    f = []
+
+    for i in range(1, len(data['timestamp'])):
+        quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
+                         data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
+        R = rowan.to_matrix(quat)
+        
+        acc = R @ np.array([data['acc.x'][i], data['acc.y'][i], data['acc.z'][i]])
+        acc[2] -= 1.
+        acc *= g
+        
+        u = data['ctrlLeeP.thrustSI'][i]
+
+        f_u = np.array([0, 0, u])
+        f_a = disturbance_forces(m, acc, R, f_u)
+        f.append(f_a)
+
+    f = np.array(f)
+
+    return f
+
 def residual_v2(data):
     K_af = np.array([
         [-10.2506, -0.3177,  -0.4332],
@@ -160,3 +183,30 @@ def residual_v2(data):
 
     f = np.array(f)
     return f
+
+
+def project(this, on_that):
+    projections = []
+    for j in range(len(on_that)):
+        on_that[j] /= np.linalg.norm(on_that[j])
+        dot_product = np.dot(this[j], on_that[j])
+
+        projected = (dot_product / np.dot(on_that[j], on_that[j])) * on_that[j]
+
+        projections.append(projected)
+
+    projections = np.array(projections)
+    return projections
+
+def project_onto_plane(v, n):
+    projections = []
+    for j in range(len(v)):
+        n[j] = n[j] / np.linalg.norm(n[j])
+        dot_product = np.dot(v[j], n[j])
+        projection_on_normal = dot_product * n[j]
+        projection_on_plane = v[j] - projection_on_normal
+    
+        projections.append(projection_on_plane)
+
+    projections = np.array(projections)
+    return projections
