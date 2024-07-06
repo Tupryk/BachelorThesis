@@ -9,16 +9,36 @@ g = MultirotorConfig.GRAVITATION
 d2r = MultirotorConfig.deg2rad
 I = MultirotorConfig.INERTIA
 d = MultirotorConfig.DISTANCE_ARM
-m = MultirotorConfig.MASS
+# m = MultirotorConfig.MASS
+m = 0.037
 ms2g = MultirotorConfig.ms2g
 g2N = MultirotorConfig.g2N
 
 
+def brushless_thrust_torque(pwm):
+    thrustGram = 0
+    d00 = 0.16609668469985447
+    d10 = 0.02297914810965436
+    d20 = 0.0001878280261464696
+
+    a = d20
+    b = d10
+    c = d00 - pwm
+    thrustGram0 = (-b + np.sqrt(b**2 - 4*a*c)) / (2*a)
+    thrustGram1 = (-b - np.sqrt(b**2 - 4*a*c)) / (2*a)
+
+    return thrustGram0 * g2N
+
 def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
-    f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
-    f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
-    f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
-    f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+    # f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
+    # f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
+    # f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
+    # f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+
+    f_1 = brushless_thrust_torque(pwm_1)
+    f_2 = brushless_thrust_torque(pwm_2)
+    f_3 = brushless_thrust_torque(pwm_3)
+    f_4 = brushless_thrust_torque(pwm_4)
 
     # poly_vals = [1.65049399e-09, 9.44396129e-05, -3.77748052e-01]
     # f_1 = np.polyval(poly_vals, pwm_1) * g2N

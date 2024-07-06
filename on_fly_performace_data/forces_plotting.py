@@ -29,8 +29,8 @@ plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
 ### Recorded data ###
 # data_paths = ["./new_data/nn_log04"]
 # labels = ["Lee ctrl. + NN"]
-data_paths = ["../flight_data/jana02"]
-labels = ["jana02"]
+data_paths = ["../crazyflie-data-collection/brushless_flights/data/eckart34"]
+labels = ["eckart34"]
 
 for i, data_path in enumerate(data_paths):
     data = cfusdlog.decode(data_path)['fixedFrequency']
@@ -44,21 +44,21 @@ for i, data_path in enumerate(data_paths):
     # vector = np.array([data["nn_output.f_x"], data["nn_output.f_y"]]).T
     # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Predicted residual forces")
 
-    f, _ = residual(data, use_rpm=False, rot=False)
-    origin = np.array([x[1:], y[1:]]).T
-    vector = np.array([f[:, 0], f[:, 1]]).T
+    # f, _ = residual(data, use_rpm=False, rot=False)
+    # origin = np.array([x[1:], y[1:]]).T
+    # vector = np.array([f[:, 0], f[:, 1]]).T
     # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="pwm")
     # plt.plot(f[:, 1], label="pwm")
 
-    f = residual_v2(data)
-    origin = np.array([x[1:], y[1:]]).T
-    vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="Residual v2")
+    # f = residual_v2(data)
+    # origin = np.array([x[1:], y[1:]]).T
+    # vector = np.array([f[:, 0], f[:, 1]]).T
+    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="Residual v2")
 
-    f, _ = residual(data, use_rpm=True, rot=False)
+    f, _ = residual(data)
     origin = np.array([x[1:], y[1:]]).T
     vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="rpm")
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual with pwm")
     # plt.plot(f[:, 1], label="rpm")
 
     # origin = np.array([x[1:], y[1:]]).T
