@@ -16,7 +16,6 @@ g2N = MultirotorConfig.g2N
 
 
 def brushless_thrust_torque(pwm):
-    thrustGram = 0
     d00 = 0.16609668469985447
     d10 = 0.02297914810965436
     d20 = 0.0001878280261464696
@@ -30,15 +29,15 @@ def brushless_thrust_torque(pwm):
     return thrustGram0 * g2N
 
 def thrust_torque(pwm_1, pwm_2, pwm_3, pwm_4, mv):
-    # f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
-    # f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
-    # f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
-    # f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
+    f_1 = (11.09-39.08*pwm_1-9.53*mv + 20.57*pwm_1**2 + 38.43*pwm_1*mv)*g2N
+    f_2 = (11.09-39.08*pwm_2-9.53*mv + 20.57*pwm_2**2 + 38.43*pwm_2*mv)*g2N
+    f_3 = (11.09-39.08*pwm_3-9.53*mv + 20.57*pwm_3**2 + 38.43*pwm_3*mv)*g2N
+    f_4 = (11.09-39.08*pwm_4-9.53*mv + 20.57*pwm_4**2 + 38.43*pwm_4*mv)*g2N
 
-    f_1 = brushless_thrust_torque(pwm_1)
-    f_2 = brushless_thrust_torque(pwm_2)
-    f_3 = brushless_thrust_torque(pwm_3)
-    f_4 = brushless_thrust_torque(pwm_4)
+    # f_1 = brushless_thrust_torque(pwm_1)
+    # f_2 = brushless_thrust_torque(pwm_2)
+    # f_3 = brushless_thrust_torque(pwm_3)
+    # f_4 = brushless_thrust_torque(pwm_4)
 
     # poly_vals = [1.65049399e-09, 9.44396129e-05, -3.77748052e-01]
     # f_1 = np.polyval(poly_vals, pwm_1) * g2N
@@ -230,3 +229,60 @@ def project_onto_plane(v, n):
 
     projections = np.array(projections)
     return projections
+
+def brushless_residual(data_usd, use_rpm=True):
+    q = np.array([
+        data_usd['stateEstimate.qw'],
+        data_usd['stateEstimate.qx'],
+        data_usd['stateEstimate.qy'],
+        data_usd['stateEstimate.qz']]).T
+
+    rpm = np.array([
+        data_usd['rpm.m1'],
+        data_usd['rpm.m2'],
+        data_usd['rpm.m3'],
+        data_usd['rpm.m4']]).T
+    
+    pwm = np.array([
+        data_usd['pwm.m1_pwm'],
+        data_usd['pwm.m2_pwm'],
+        data_usd['pwm.m3_pwm'],
+        data_usd['pwm.m4_pwm']]).T
+    
+    kw = 4.310657321921365e-08
+    force_in_grams = kw * rpm**2
+    force_in_grams_from_pwm = -5.360718677769569 + pwm * 0.0005492858445116151
+
+    acc_body = np.array([
+        data_usd['acc.x'],
+        data_usd['acc.y'],
+        data_usd['acc.z']]).T * 9.81
+    
+    acc_world = rowan.rotate(q, acc_body)
+
+    mass = 0.038 # kg
+
+    arm_length = 0.046  # m
+    arm = 0.707106781 * arm_length
+    t2t = 0.006  # thrust-to-torque ratio
+    B0 = np.array([
+        [1, 1, 1, 1],
+        [-arm, -arm, arm, arm],
+        [-arm, arm, arm, -arm],
+        [-t2t, t2t, -t2t, t2t]
+        ])
+    if use_rpm:
+        force = force_in_grams / 1000 * 9.81
+    else:
+        force = force_in_grams_from_pwm / 1000 * 9.81
+    eta = np.empty((force.shape[0], 4))
+    f_u = np.empty((force.shape[0], 3))
+    tau_u = np.empty((force.shape[0], 3))
+
+    for k in range(force.shape[0]):
+        eta[k] = np.dot(B0, force[k])
+        f_u[k] = np.array([0, 0, eta[k,0]])
+        tau_u[k] = np.array([eta[k,1], eta[k,2], eta[k,3]])
+
+    f_a = mass * acc_world - rowan.rotate(q, f_u)
+    return f_a, tau_u

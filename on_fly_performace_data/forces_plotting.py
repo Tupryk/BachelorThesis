@@ -2,7 +2,7 @@ import cfusdlog
 import numpy as np
 import uav_trajectory
 import matplotlib.pyplot as plt
-from residual_calculation import residual, residual_v2
+from residual_calculation import residual, residual_v2, brushless_residual
 
 
 THREE_D = False
@@ -40,30 +40,14 @@ for i, data_path in enumerate(data_paths):
     y = [i for i in data["stateEstimate.y"]]
     z = [i-1. for i in data["stateEstimate.z"]]
 
-    # origin = np.array([x, y]).T
-    # vector = np.array([data["nn_output.f_x"], data["nn_output.f_y"]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Predicted residual forces")
-
-    # f, _ = residual(data, use_rpm=False, rot=False)
-    # origin = np.array([x[1:], y[1:]]).T
-    # vector = np.array([f[:, 0], f[:, 1]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="pwm")
-    # plt.plot(f[:, 1], label="pwm")
-
-    # f = residual_v2(data)
-    # origin = np.array([x[1:], y[1:]]).T
-    # vector = np.array([f[:, 0], f[:, 1]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="Residual v2")
-
-    f, _ = residual(data)
-    origin = np.array([x[1:], y[1:]]).T
-    vector = np.array([f[:, 0], f[:, 1]]).T
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual with pwm")
-    # plt.plot(f[:, 1], label="rpm")
-
-    # origin = np.array([x[1:], y[1:]]).T
-    # vector = np.array([data["lee.Fd_x"][1:], data["lee.Fd_y"][1:]]).T
-    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
+    f, _ = brushless_residual(data, use_rpm=True)
+    origin = np.array([x, y]).T
+    vector = np.array([f[:, 0], f[:, 1]]).T * 10
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="Residual with rpm scaled by 10")
+    f, _ = brushless_residual(data, use_rpm=False)
+    origin = np.array([x, y]).T
+    vector = np.array([f[:, 0], f[:, 1]]).T * 10
+    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual with pwm scaled by 10")
 
     if THREE_D:
         ax.plot3D(x, y, z, label=labels[i])
