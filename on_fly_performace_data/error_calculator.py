@@ -32,7 +32,7 @@ plt.plot(target_xs, target_ys, label="Desired path")
 ### Recorded data ###
 # data_paths = [f"./error_calculating/nn/nn_log0{i}" for i in range(10)]
 # data_paths = [f"./error_calculating/lee/nn_log0{i}" for i in range(1, 9)]
-data_paths = [f"./error_calculating/lee/nn_log0{i}" for i in range(1)]
+data_paths = [f"./final_networks/nn/nn_log0{i}" for i in range(1, 3)]
 labels = data_paths
 
 cutoff = 2700
@@ -57,7 +57,6 @@ for i, data_path in enumerate(data_paths):
 
     acumulated_error = 0
     for j, _ in enumerate(x_):
-        print(np.linalg.norm(vector))
         acumulated_error += np.linalg.norm(vector[j])
     errors.append(acumulated_error/len(x_))
     print("Acumulated error: ", acumulated_error)

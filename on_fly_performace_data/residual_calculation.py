@@ -9,8 +9,7 @@ g = MultirotorConfig.GRAVITATION
 d2r = MultirotorConfig.deg2rad
 I = MultirotorConfig.INERTIA
 d = MultirotorConfig.DISTANCE_ARM
-# m = MultirotorConfig.MASS
-m = 0.037
+m = MultirotorConfig.MASS
 ms2g = MultirotorConfig.ms2g
 g2N = MultirotorConfig.g2N
 
@@ -231,6 +230,7 @@ def project_onto_plane(v, n):
     return projections
 
 def brushless_residual(data_usd, use_rpm=True):
+
     q = np.array([
         data_usd['stateEstimate.qw'],
         data_usd['stateEstimate.qx'],
@@ -272,9 +272,9 @@ def brushless_residual(data_usd, use_rpm=True):
         [-t2t, t2t, -t2t, t2t]
         ])
     if use_rpm:
-        force = force_in_grams / 1000 * 9.81
+        force = force_in_grams * g2N
     else:
-        force = force_in_grams_from_pwm / 1000 * 9.81
+        force = force_in_grams_from_pwm * g2N
     eta = np.empty((force.shape[0], 4))
     f_u = np.empty((force.shape[0], 3))
     tau_u = np.empty((force.shape[0], 3))

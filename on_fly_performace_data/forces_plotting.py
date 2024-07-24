@@ -24,7 +24,7 @@ for t, i in zip(ts, range(0, len(ts))):
     e.pos += np.array([0, 0, 1])
     evals[i, 0:3] = e.pos
 
-plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
+# plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
 
 ### Recorded data ###
 # data_paths = ["./new_data/nn_log04"]
@@ -39,20 +39,21 @@ for i, data_path in enumerate(data_paths):
     x = [i for i in data["stateEstimate.x"]]
     y = [i for i in data["stateEstimate.y"]]
     z = [i-1. for i in data["stateEstimate.z"]]
+    origin = np.array([x, y]).T
 
     f, _ = brushless_residual(data, use_rpm=True)
-    origin = np.array([x, y]).T
     vector = np.array([f[:, 0], f[:, 1]]).T * 10
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="Residual with rpm scaled by 10")
+    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='g', alpha=.1, label="Residual with rpm scaled by 10")
+    plt.plot(vector[:,1], label="f_a.x with rpm")
     f, _ = brushless_residual(data, use_rpm=False)
-    origin = np.array([x, y]).T
     vector = np.array([f[:, 0], f[:, 1]]).T * 10
-    plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual with pwm scaled by 10")
+    # plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="Residual with pwm scaled by 10")
+    plt.plot(vector[:,1], label="f_a.x with pwm")
 
-    if THREE_D:
-        ax.plot3D(x, y, z, label=labels[i])
-    else:
-        plt.plot(x, y, label=labels[i])
+    # if THREE_D:
+    #     ax.plot3D(x, y, z, label=labels[i])
+    # else:
+    #     plt.plot(x, y, label=labels[i])
 
     f, tau = residual(data)
     for j, v in enumerate(["x", "y", "z"]):
@@ -61,5 +62,5 @@ for i, data_path in enumerate(data_paths):
 
 plt.title("Fx and Fy compared to quadrotor trajectory")
 plt.legend()
-plt.axis('equal')
+# plt.axis('equal')
 plt.show()
