@@ -50,8 +50,10 @@ def exportTree(model_path):
             for v in values:
                 if v == "split_conditions" or v == "output_value":
                     result += f"    float {v}_{i}_{j}[{node_count}];\n"
+                elif v == "split_indices":
+                    result += f"    __UINT8_TYPE__ {v}_{i}_{j}[{node_count}];\n"
                 else:
-                    result += f"    int {v}_{i}_{j}[{node_count}];\n"
+                    result += f"    __INT16_TYPE__ {v}_{i}_{j}[{node_count}];\n"
             
             if not (i == len(model.estimators_)-1 and j == len(tree_group.estimators_)-1): result += "\n"
     result += "};\n\n"
@@ -103,12 +105,11 @@ if __name__ == '__main__':
         sk_model = pickle.load(f)
     test_data = np.load(f"../pth_to_c_converter/test_data.npz")["array"]
     py_output = sk_model.predict(test_data)
-    print(c_output[0])
-    print(py_output[0])
 
     same = True
+    output_size = len(c_output[0])
     for i in range(len(c_output)):
-        for j in range(6):
+        for j in range(output_size):
             if np.abs(c_output[i][j]-py_output[i][j]) >= 1e-4:
                 same = False
                 break

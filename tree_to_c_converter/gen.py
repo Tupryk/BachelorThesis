@@ -94,8 +94,6 @@ if __name__ == '__main__':
 	xg_model.load_model('../new_model_gen/tree.json')
 	test_data = np.load(f"../pth_to_c_converter/test_data.npz")["array"]
 	py_output = xg_model.predict(test_data)
-	print(c_output[0])
-	print(py_output[0])
 
 	same = True
 	for i in range(len(c_output)):
