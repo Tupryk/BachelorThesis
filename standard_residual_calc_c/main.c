@@ -11,7 +11,7 @@ int main()
 	{
 		printf("[");
 		float output[OUTPUT_SIZE];
-		float pwm[5] = {input[i][0], input[i][1], input[i][2], input[i][3], input[i][4]};
+		float pwm[4] = {input[i][0], input[i][1], input[i][2], input[i][3]};
 		float R02 = input[i][5];
 		float R12 = input[i][6];
 		float acc_x = input[i][7];

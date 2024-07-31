@@ -6,7 +6,7 @@ import numpy as np
 
 
 if __name__ == "__main__":
-    data = cfusdlog.decode("../flight_data/jana30")['fixedFrequency']
+    data = cfusdlog.decode("../flight_data/jana20")['fixedFrequency']
     for i in range(1, 5):
         print(f"pwm{i} scaler", np.linalg.norm(data[f'pwm.m{i}_pwm']))
     print(f"mv scaler", np.linalg.norm(data['pm.vbatMV']))
