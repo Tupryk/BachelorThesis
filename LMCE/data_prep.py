@@ -6,10 +6,9 @@ from sklearn.utils import shuffle
 from torch.utils.data import TensorDataset, DataLoader
 
 import LMCE.cfusdlog as cfusdlog
-from LMCE.residual_calculation import residual, brushless_residual
 
 
-def feature_label_from_data(data: dict, residual_func=residual):
+def feature_label_from_data(data: dict, residual_func):
     features = []
     labels = []
 
@@ -31,8 +30,8 @@ def feature_label_from_data(data: dict, residual_func=residual):
     return features, labels
 
 
-def prepare_data(file_paths: list, save_as: str="", shuffle_data: bool=True, residual_func=residual):
-    if os.path.exists(f"./data/{save_as}.npz"):
+def prepare_data(file_paths: list, residual_func, save_as: str="", shuffle_data: bool=True, overwrite: bool=True):
+    if os.path.exists(f"./data/{save_as}.npz") and not overwrite:
         print("Data already exists, loading from files...")
         loaded_arrays = np.load(f"./data/{save_as}.npz")
         X = loaded_arrays['X']
