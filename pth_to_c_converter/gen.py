@@ -84,7 +84,7 @@ def exportNet(pth_path):
 if __name__ == '__main__':
 	# Generate the model
 	print("Generating model c file...")
-	model_path = "../new_model_gen/model.pth"
+	model_path = "../new_model_gen/sota_brushless/model.pth"
 	exportNet(model_path)
 
 	# Check if the model outputs match
@@ -97,10 +97,10 @@ if __name__ == '__main__':
 	c_output = c_output.decode('utf-8')
 	c_output = np.array(eval(c_output))
 
-	model_dir = directory = os.path.dirname(model_path)
+	model_dir = os.path.dirname(model_path)
 	sys.path.append(os.path.join(os.path.dirname(__file__), model_dir)) # Asuming that there exists a model.py in the same folder as the .pth with an MPL class
 	from model import MLP # type: ignore
-	model = MLP()
+	model = MLP(output_size=2)
 	model.load_state_dict(torch.load(model_path))
 	model.double()
 	test_data = np.load(f"./test_data.npz")["array"]
@@ -108,8 +108,9 @@ if __name__ == '__main__':
 	py_output = model.forward(tensor_input).detach().numpy()
 
 	same = True
+	output_size = len(c_output[0])
 	for i in range(len(c_output)):
-		for j in range(6):
+		for j in range(output_size):
 			if np.abs(c_output[i][j]-py_output[i][j]) >= 1e-4:
 				same = False
 				break

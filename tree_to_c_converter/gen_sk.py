@@ -88,7 +88,7 @@ def exportTree(model_path):
 
 
 if __name__ == '__main__':
-    model_path = "../new_model_gen/random_forest_regressor_small.pkl"
+    model_path = "../new_model_gen/random_forest_regressor_small2.pkl"
     exportTree(model_path)
 
     # Check if the model outputs match

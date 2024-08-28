@@ -154,7 +154,7 @@ def exportTree(model, model_path):
 
 
 if __name__ == '__main__':
-    model_path = "../new_model_gen/random_forest_regressor_small.pkl"
+    model_path = "../new_model_gen/random_forest_regressor_small2.pkl"
     model = model_read(model_path)
     exportTree(model, model_path)
 

@@ -1,4 +1,4 @@
-// GENERATED FILE FROM MODEL ../new_model_gen/random_forest_regressor_small.pkl
+// GENERATED FILE FROM MODEL ../new_model_gen/random_forest_regressor_small2.pkl
 #ifndef __GEN_TREE__
 #define __GEN_TREE__
 

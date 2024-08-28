@@ -11,12 +11,12 @@ int main()
 	{
 		printf("[");
 		const float *model_output = nn_forward(input[i]);
-		for (int i = 0; i < OUTPUT_SIZE; i++)
+		for (int j = 0; j < OUTPUT_SIZE; j++)
 		{
-			if (i == OUTPUT_SIZE - 1)
-				printf("%f", model_output[i]);
+			if (j == OUTPUT_SIZE - 1)
+				printf("%f", model_output[j]);
 			else
-				printf("%f, ", model_output[i]);
+				printf("%f, ", model_output[j]);
 		}
 		if (i == 99)
 			printf("]");

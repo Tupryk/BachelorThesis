@@ -51,7 +51,7 @@ def residual(data_usd: dict, is_brushless: bool = False, has_payload: bool = Fal
         data_usd['stateEstimate.qz']]).T
 
     acc_world = rowan.rotate(q, acc_body)
-    acc_world[:, 2] -= 1.
+    # acc_world[:, 2] -= 1.
     acc_world *= 9.81
 
     # Get total forces

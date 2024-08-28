@@ -1,3 +1,4 @@
+import os
 import torch
 import numpy as np
 from torch import nn
@@ -88,4 +89,4 @@ class MLP(nn.Module):
         plt.show()
     
     def save(self, data_path: str="model.pth"):
-        torch.save(self.state_dict(), data_path)
+        torch.save(self.state_dict(), f"./{data_path}")
