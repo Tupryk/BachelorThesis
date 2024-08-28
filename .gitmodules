@@ -1,6 +1,6 @@
 [submodule "crazyflie-firmware"]
 	path = crazyflie-data-collection
-	url = https://github.com/IMRCLab/crazyflie-data-collection
+	url = ../../IMRCLab/crazyflie-data-collection
     
 [submodule "crazyflie-firmware"]
 	path = crazyflie-firmware
