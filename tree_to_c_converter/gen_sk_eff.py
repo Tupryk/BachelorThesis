@@ -2,7 +2,6 @@ import os
 import pickle
 import subprocess
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
 
 
 def arr2cstr(a):
@@ -32,48 +31,59 @@ def model_read(model_path):
                 "output_value": tree.tree_.value.squeeze()
             }
 
-            new_indices = []
+            node_count = len(tree["split_conditions"])
+
+            non_child = []
             for k, node in enumerate(tree["left_children"]):
                 if node >= 0:
-                    new_indices.append(k)
+                    non_child.append(k)
 
             leaf_nodes = []
-            parent_indices = []
+            left_parent_indices = []
+            right_parent_indices = []
             leaf_nodes_count = 0
-            for k, node in enumerate(tree["left_children"]):
-                if node >= 0 and tree["left_children"][node] < 0:
-                    leaf_nodes.append(tree["output_value"][node])
-                    leaf_nodes_count += 1
-                    tree["left_children"][k] = leaf_nodes_count-1 + 2**14
-                    parent_indices.append(k)
+            for c in range(node_count):
 
-            for k, node in enumerate(tree["right_children"]):
-                if node >= 0 and tree["right_children"][node] < 0:
-                    leaf_nodes.append(tree["output_value"][node])
-                    leaf_nodes_count += 1
-                    tree["right_children"][k] = leaf_nodes_count-1 + 2**14
-                    parent_indices.append(k)
+                if tree["left_children"][c] < 0:
 
-            # Remove the under 0s
-            tree["split_conditions"] = [x for k, x in enumerate(tree["split_conditions"]) if tree["left_children"][k] >= 0 and tree["right_children"][k] >= 0]
+                    # Is child, look for the parent
+                    for p in range(node_count):
+
+                        if tree["left_children"][p] == c:
+                            leaf_nodes.append(tree["output_value"][c])
+                            leaf_nodes_count += 1
+                            tree["left_children"][p] = leaf_nodes_count-1 + 2**14
+                            left_parent_indices.append(p)
+
+                        elif tree["right_children"][p] == c:
+                            leaf_nodes.append(tree["output_value"][c])
+                            leaf_nodes_count += 1
+                            tree["right_children"][p] = leaf_nodes_count-1 + 2**14
+                            right_parent_indices.append(p)
+
+            # Remove children
+            tree["split_conditions"] = [x for k, x in enumerate(tree["split_conditions"]) if tree["left_children"][k] >= 0]
             tree["split_indices"] = [x for x in tree["split_indices"] if x >= 0]
 
             new_lefts = []
-            for k, x in enumerate(tree["left_children"]):
-                if x >= 0:
-                    if not k in parent_indices:
-                        new_lefts.append(new_indices.index(x))
-                    else:
-                        new_lefts.append(tree["left_children"][k])
+            for k, x in enumerate(non_child):
+                if not x in left_parent_indices:
+                    new_lefts.append(non_child.index(tree["left_children"][x]))
+                    if new_lefts[-1] == -1:
+                        print(non_child.index(tree["left_children"][x]))
+                        print(tree["left_children"][x])
+                        print("____________")
+                else:
+                    new_lefts.append(tree["left_children"][x])
+
             tree["left_children"] = new_lefts
 
             new_rights = []
-            for k, x in enumerate(tree["right_children"]):
-                if x >= 0:
-                    if not k in parent_indices:
-                        new_rights.append(new_indices.index(x))
-                    else:
-                        new_rights.append(tree["right_children"][k])
+            for k, x in enumerate(non_child):
+                if not x in right_parent_indices:
+                    new_rights.append(non_child.index(tree["right_children"][x]))
+                else:
+                    new_rights.append(tree["right_children"][x])
             tree["right_children"] = new_rights
 
             tree["output_value"] = leaf_nodes
@@ -166,6 +176,9 @@ if __name__ == '__main__':
 
     c_output, _ = process.communicate()
     c_output = c_output.decode('utf-8')
+    print("C output -------------------")
+    print(c_output)
+    print("----------------------------")
     c_output = np.array(eval(c_output))
 
     with open(model_path, 'rb') as f:
