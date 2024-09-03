@@ -9,7 +9,7 @@ from sklearn.multioutput import MultiOutputRegressor
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size: int=12, hidden_size: int=16, output_size: int=2, learning_rate: float=.0035):
+    def __init__(self, input_size: int=12, hidden_size: int=32, output_size: int=2, learning_rate: float=.0035):
         super(MLP, self).__init__()
         
         self.input_size = input_size
@@ -22,6 +22,8 @@ class MLP(nn.Module):
 
         self.layers = nn.Sequential(
             nn.Linear(self.input_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
@@ -98,13 +100,18 @@ class MLP(nn.Module):
 
 
 class DTE():
-    def __init__(self):
+    def __init__(self, n_estimators=5,
+                       max_depth=10,
+                       min_samples_split=200,
+                       ccp_alpha=0.0
+                       ):
+        
         self.model = MultiOutputRegressor(
                         RandomForestRegressor(
-                            n_estimators=5,
-                            max_depth=10,
-                            min_samples_split=200,
-                            ccp_alpha=0.0
+                            n_estimators=n_estimators,
+                            max_depth=max_depth,
+                            min_samples_split=min_samples_split,
+                            ccp_alpha=ccp_alpha
                         )
                     )
 
