@@ -176,9 +176,6 @@ if __name__ == '__main__':
 
     c_output, _ = process.communicate()
     c_output = c_output.decode('utf-8')
-    print("C output -------------------")
-    print(c_output)
-    print("----------------------------")
     c_output = np.array(eval(c_output))
 
     with open(model_path, 'rb') as f:

@@ -1,13 +1,17 @@
-import cfusdlog
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import LMCE.cfusdlog as cfusdlog
 import numpy as np
-import uav_trajectory
+import LMCE.uav_trajectory as uav_trajectory
 import matplotlib.pyplot as plt
-from residual_calculation import residual, residual_v2
+from LMCE.residual_calculation import residual
 
 
 ### Trajectory to be followed ###
 traj = uav_trajectory.Trajectory()
-traj.loadcsv("./figure8.csv")
+traj.loadcsv("../LMCE/flight_paths/figure8.csv")
 
 traj.stretchtime(2)
 
@@ -23,7 +27,7 @@ plt.plot(evals[:, 0], evals[:, 1], label="Desired path")
 ### Recorded data ###
 # data_paths = ["./new_data/nn_log04"]
 # labels = ["Lee ctrl. + NN"]
-data_path = "../flight_data/jana02"
+data_path = "../crazyflie-data-collection/jana_flight_data/jana02"
 label = "jana02"
 
 vel2res = []
@@ -40,7 +44,8 @@ vector_v = np.array([data["stateEstimate.vx"][1:], data["stateEstimate.vy"][1:]]
 scale = .3
 plt.quiver(origin[:,0], origin[:,1], vector_v[:,0] * scale, vector_v[:,1] * scale, angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="velocities")
 
-f, _ = residual(data, use_rpm=False, rot=True)
+f, _ = residual(data, use_rpm=False)
+f = f[1:]
 origin = np.array([x[1:], y[1:]]).T
 vector_r = np.array([f[:, 0], f[:, 1]]).T * 5
 plt.quiver(origin[:,0], origin[:,1], vector_r[:,0], vector_r[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1, label="residuals")
@@ -68,7 +73,8 @@ plt.plot(vel2res)
 plt.title("Cosine of the angle between the velocity and residual in 2d space over time")
 plt.show()
 
-f = residual_v2(data)
+f, _ = residual(data)
+f = f[1:]
 origin = np.array([x[1:], y[1:]]).T
 vector_r = np.array([f[:, 0], f[:, 1]]).T
 plt.quiver(origin[:,0], origin[:,1], vector_r[:,0], vector_r[:,1], angles='xy', scale_units='xy', scale=1, color='b', alpha=.1, label="Drag model")

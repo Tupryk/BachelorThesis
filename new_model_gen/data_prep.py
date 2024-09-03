@@ -6,9 +6,9 @@ import numpy as np
 from sklearn.utils import shuffle
 from torch.utils.data import TensorDataset, DataLoader
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../on_fly_performace_data'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../LMCE'))
 import cfusdlog # type: ignore
-from residual_calculation import residual, brushless_residual # type: ignore
+from residual_calculation import residual # type: ignore
 
 
 def feature_label_from_data(data: dict):
@@ -26,7 +26,7 @@ def feature_label_from_data(data: dict):
     k = np.array([data['acc.x'][start:], data['acc.y'][start:], data['acc.z'][start:], data['gyro.x'][start:], data['gyro.y'][start:],data['gyro.z'][start:]]).T
     features = np.append(k, r, axis=1)
 
-    f_a, tau_a = brushless_residual(data)
+    f_a, tau_a = residual(data)
     # labels = np.append(f_a, tau_a, axis=1)
     labels = np.array([f[:2] for f in f_a])
 

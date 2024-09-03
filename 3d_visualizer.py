@@ -1,16 +1,13 @@
 import os
-import torch
-import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 
 import LMCE.cfusdlog as cfusdlog
-from LMCE.model import MLP
-from LMCE.residual_calculation import brushless_residual
-from LMCE.data_prep import prepare_data, create_dataloader
-from LMCE.model_to_c_conversion import exportNet, c_model_test
+from LMCE.residual_calculation import residual
 
-data_path = f"./crazyflie-data-collection/brushless_flights_payload/data/eckart{24}"
+
+residual_func = lambda data: residual(data, is_brushless=False, has_payload=False, total_mass=.034)
+data_path = f"./crazyflie-data-collection/jana_flight_data/jana02"
 visual_scale = 1.
 
 fig = plt.figure()
@@ -24,18 +21,19 @@ y = [i for i in data["stateEstimate.y"]]
 z = [i for i in data["stateEstimate.z"]]
 origin = np.array([x, y, z]).T
 
-f, _ = brushless_residual(data, use_rpm=True)
+f, _ = residual_func(data)
 vector = np.array([f[:, 0], f[:, 1], f[:, 2]]).T * visual_scale
-ax.quiver(origin[:, 0], origin[:, 1], origin[:, 2], vector[:, 0], vector[:, 1], vector[:, 2], color='r', alpha=.1, label="Residual with rpm scaled by 10")
+ax.quiver(origin[:, 0], origin[:, 1], origin[:, 2], vector[:, 0], vector[:, 1],
+          vector[:, 2], color='r', alpha=.1, label=f"Residual forces (scaled by {visual_scale})")
 
-ax.plot3D(x, y, z, label=label)
+ax.plot3D(x, y, z, label="Quadrotor trajectory")
 
 # Calculate the avg. residual force for each axis
 for j, v in enumerate(["x", "y", "z"]):
     f_j = [f_[j] for f_ in f]
     print(f"{label} mean residual f_{v}: {sum(f_j)/len(f_j)}")
 
-plt.title("Fx and Fy on to quadrotor trajectory")
+plt.title("Residual forces on quadrotor trajectory")
 plt.legend()
 plt.axis('equal')
 plt.show()

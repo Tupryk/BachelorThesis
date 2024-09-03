@@ -29,10 +29,10 @@ test_dataloader = create_dataloader(X_test, y_test)
 
 # Create and train neural network
 model = MLP(output_size=2)
-model.train_model(train_dataloader, test_dataloader, epochs=20)
-model.show_progress()
-model.save()
-# model.load_state_dict(torch.load('model.pth'))
+# model.train_model(train_dataloader, test_dataloader, epochs=20)
+# model.show_progress()
+# model.save()
+model.load_state_dict(torch.load('model.pth'))
 
 # Plot results
 model.double()

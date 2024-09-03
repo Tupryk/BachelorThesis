@@ -1,13 +1,18 @@
-import cfusdlog
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import LMCE.cfusdlog as cfusdlog
 import numpy as np
 import matplotlib.pyplot as plt
-from residual_calculation import residual
+from LMCE.residual_calculation import residual
 
 
-data_path = "./new_data/nn_log04"
+data_path = "../crazyflie-data-collection/olddata/new_data/nn_log04"
 data = cfusdlog.decode(data_path)['fixedFrequency']
 timestamp = data["timestamp"][1:]
-f, tau = residual(data)
+f, tau = residual(data, use_rpm=False)
+f = f[1:]
 
 for i, v in enumerate(["x", "y", "z"]):
     plt.scatter(np.abs(data[f"stateEstimate.v{v}"][1:]), np.abs(f[:, i]), c=timestamp, cmap='viridis', label=f"Velocity to force in {v}")

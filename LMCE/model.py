@@ -1,8 +1,11 @@
 import os
 import torch
+import pickle
 import numpy as np
 from torch import nn
 import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.multioutput import MultiOutputRegressor
 
 
 class MLP(nn.Module):
@@ -88,7 +91,33 @@ class MLP(nn.Module):
         plt.legend()
         plt.show()
     
-    def save(self, data_path: str="model.pth"):
+    def save(self, name: str="mlp"):
         if not os.path.exists("./models"):
             os.makedirs("./models")
-        torch.save(self.state_dict(), f"./models/{data_path}")
+        torch.save(self.state_dict(), f"./models/{name}.pth")
+
+
+class DTE():
+    def __init__(self):
+        self.model = MultiOutputRegressor(
+                        RandomForestRegressor(
+                            n_estimators=5,
+                            max_depth=10,
+                            min_samples_split=200,
+                            ccp_alpha=0.0
+                        )
+                    )
+
+    def train(self, X_train: np.ndarray, y_train: np.ndarray):
+        self.model.fit(X_train, y_train)
+
+    def forward(self, x: np.ndarray):
+        return self.model.predict(x)
+
+    def save(self, name: str="dte"):
+        with open(f"./models/{name}.pkl", 'wb') as f:
+            pickle.dump(self.model, f)
+
+    def load(self, name: str):
+        with open(f"./models/{name}.pkl", 'rb') as f:
+            self.model = pickle.load(f)

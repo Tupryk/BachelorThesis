@@ -1,9 +1,8 @@
-[submodule "crazyflie-firmware"]
+[submodule "crazyflie-data-collection"]
 	path = crazyflie-data-collection
-	url = ../../IMRCLab/crazyflie-data-collection.git
-    
+	url = https://github.com/IMRCLab/crazyflie-data-collection.git
+
 [submodule "crazyflie-firmware"]
 	path = crazyflie-firmware
 	url = ../crazyflie-firmware.git
     branch = upstream_lee
-    

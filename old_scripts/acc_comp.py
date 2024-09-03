@@ -1,10 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import rowan
-import cfusdlog
+import LMCE.cfusdlog as cfusdlog
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-data = cfusdlog.decode("./payload_data/cf3_t_03")['fixedFrequency']
+data = cfusdlog.decode("../crazyflie-data-collection/olddata/payload_data/cf3_t_03")['fixedFrequency']
 print(data.keys())
 
 accs = []

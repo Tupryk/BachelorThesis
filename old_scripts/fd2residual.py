@@ -1,19 +1,23 @@
-import cfusdlog
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import LMCE.cfusdlog as cfusdlog
 import numpy as np
 import matplotlib.pyplot as plt
-from residual_calculation import residual
+from LMCE.residual_calculation import residual
 
 
-data_path = "./new_data/nn_log04"
+data_path = "../crazyflie-data-collection/olddata/new_data/nn_log04"
 data = cfusdlog.decode(data_path)['fixedFrequency']
-timestamp = data["timestamp"][1:]
+timestamp = data["timestamp"]
 
 f, _ = residual(data, use_rpm=False)
 
 residuals = [np.linalg.norm(f_[:2]) for f_ in f]
 plt.plot(timestamp, residuals, label="Residual")
 
-F_d = [np.sqrt(data["lee.Fd_x"][i]**2+data["lee.Fd_y"][i]**2)*.034 for i, _ in enumerate(data["lee.Fd_x"])][1:]
+F_d = [np.sqrt(data["lee.Fd_x"][i]**2+data["lee.Fd_y"][i]**2)*.034 for i, _ in enumerate(data["lee.Fd_x"])]
 plt.plot(timestamp, F_d, label="F_d")
 
 plt.xlabel("Time")
