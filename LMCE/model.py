@@ -102,7 +102,7 @@ class MLP(nn.Module):
 class DTE():
     def __init__(self, n_estimators=5,
                        max_depth=10,
-                       min_samples_split=200,
+                       min_samples_split=400,
                        ccp_alpha=0.0
                        ):
         
