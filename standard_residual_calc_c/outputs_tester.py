@@ -2,13 +2,17 @@ import os
 import sys
 import subprocess
 import numpy as np
+from dataset_generator import data_load
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../on_fly_performace_data/"))
-import cfusdlog # type: ignore
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+import LMCE.cfusdlog as cfusdlog
+from LMCE.residual_calculation import residual
 
 
 if __name__ == '__main__':
 	# Check if the function outputs match
+	test_data_path = "../crazyflie-data-collection/jana_flight_data/jana02"
+	data_load(test_data_path)
 	print("Comparing with original...")
 	process = subprocess.Popen('gcc main.c basic_residual_calculator.c -o p', shell=True)
 	process.wait()
@@ -16,17 +20,16 @@ if __name__ == '__main__':
 
 	c_output, _ = process.communicate()
 	c_output = c_output.decode('utf-8')
-	c_output = np.array(eval(c_output))[1:]
+	c_output = np.array(eval(c_output))
 
-	sys.path.append(os.path.join(os.path.dirname(__file__), "../on_fly_performace_data/"))
-	from residual_calculation import residual # type: ignore
-	data = cfusdlog.decode("../flight_data/jana02")['fixedFrequency']
-	py_output, _ = residual(data)
+	data = cfusdlog.decode(test_data_path)['fixedFrequency']
+	py_output, _ = residual(data, use_rpm=False)
 
 	same = True
 	for i in range(len(c_output)):
 		for j in range(2):
 			if np.abs(c_output[i][j]-py_output[i][j]) >= 1e-4:
+				print(c_output[i][j], py_output[i][j])
 				same = False
 				break
 		if not same:

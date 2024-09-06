@@ -2,10 +2,9 @@ import os
 import sys
 import rowan
 import numpy as np
-from sklearn import preprocessing
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../on_fly_performace_data/"))
-import cfusdlog # type: ignore
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+import LMCE.cfusdlog as cfusdlog
 
 
 def arr2cstr(a):
@@ -18,15 +17,11 @@ def arr2cstr(a):
 		threshold = 1e6,
 		max_line_width = 1e6).replace('\n','').replace(' ', '').replace(',', ', ').replace('[','{ ').replace(']',' }')
 
-def data_load():
-    data = cfusdlog.decode("../flight_data/jana02")['fixedFrequency']
+def data_load(path):
+    data = cfusdlog.decode(path)['fixedFrequency']
     new_data = []
     count = 100
-    pwm_1 = preprocessing.normalize(data['pwm.m1_pwm'][None])[0]
-    pwm_2 = preprocessing.normalize(data['pwm.m2_pwm'][None])[0]
-    pwm_3 = preprocessing.normalize(data['pwm.m3_pwm'][None])[0]
-    pwm_4 = preprocessing.normalize(data['pwm.m4_pwm'][None])[0]
-    mv = preprocessing.normalize(data['pm.vbatMV'][None])[0]
+
     for i in range(count):
         quat = np.array([data['stateEstimate.qw'][i], data['stateEstimate.qx'][i],
                          data['stateEstimate.qy'][i], data['stateEstimate.qz'][i]])
@@ -35,7 +30,6 @@ def data_load():
         acc *= 9.81
         pwm = [data[f'pwm.m{j}_pwm'][i] for j in range(1, 5)]
         new_data.append([*pwm, data['pm.vbatMV'][i], R[0, 2], R[1, 2], acc[0], acc[1]])
-        # new_data.append([pwm_1[i], pwm_2[i], pwm_3[i], pwm_4[i], mv[i], R[0, 2], R[1, 2], acc[0], acc[1]])
 
     gen_file = open('test_data.h', 'w')
     gen_file.write(f"const float input[{count}][9] = ")
