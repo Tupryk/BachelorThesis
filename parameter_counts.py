@@ -4,9 +4,9 @@ Aproximate parameter count for our two learning models
 
 nn_parameter_count = 0
 input_layer_size = 12
-hidden_layer_size = 32
+hidden_layer_size = 16
 output_layer_size = 2
-hidden_layer_count = 3
+hidden_layer_count = 2
 
 nn_parameter_count += input_layer_size
 nn_parameter_count += hidden_layer_size*input_layer_size + hidden_layer_size
