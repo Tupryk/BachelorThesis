@@ -9,7 +9,7 @@ from sklearn.multioutput import MultiOutputRegressor
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size: int=12, hidden_size: int=16, output_size: int=2, learning_rate: float=.0035):
+    def __init__(self, input_size: int=12, hidden_size: int=16, output_size: int=2, learning_rate: float=1e-3):
         super(MLP, self).__init__()
         
         self.input_size = input_size

@@ -3,14 +3,16 @@ from typing import List
 import matplotlib.pyplot as plt
 
 
-def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float], vis: bool=False) -> float:
+def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float], vis: bool = False) -> float:
     errors = []
 
     x = real_pos[0][:cutoff]
     y = real_pos[1][:cutoff]
 
-    x_ = [target_pos[0][int(j/len(x)*len(target_pos[0]))]-x[j] for j, _, in enumerate(x)]
-    y_ = [target_pos[1][int(j/len(x)*len(target_pos[1]))]-y[j] for j, _, in enumerate(x)]
+    x_ = [target_pos[0][int(j/len(x)*len(target_pos[0]))]-x[j]
+          for j, _, in enumerate(x)]
+    y_ = [target_pos[1][int(j/len(x)*len(target_pos[1]))]-y[j]
+          for j, _, in enumerate(x)]
 
     vector = np.array([x_, y_]).T
 
@@ -25,12 +27,14 @@ def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float]
         vector = np.array([x_, y_]).T
         plt.plot(target_pos[0], target_pos[1], label="Desired path")
         plt.plot(x, y, label="Real path")
-        plt.quiver(origin[:,0], origin[:,1], vector[:,0], vector[:,1], angles='xy', scale_units='xy', scale=1, color='r', alpha=.1)
+        plt.quiver(origin[:, 0], origin[:, 1], vector[:, 0], vector[:, 1], angles='xy',
+                   scale_units='xy', scale=1, color='r', alpha=.1, label="Deviation from flight path")
         plt.axis('equal')
         plt.legend()
         plt.show()
 
     return error
+
 
 def find_best_cutoff(real_pos: List[float], target_pos: List[float]) -> int:
     # Kind of slow, could be made nlogn
@@ -42,6 +46,7 @@ def find_best_cutoff(real_pos: List[float], target_pos: List[float]) -> int:
             break
         prev_error = current_error
     return cutoff
+
 
 if __name__ == "__main__":
     import cfusdlog

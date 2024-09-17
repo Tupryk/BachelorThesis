@@ -3,6 +3,7 @@
 __pycache__/
 jana_model_testing/
 flight_data/
+results_flight_data/
 models/
 data/
 *.aux

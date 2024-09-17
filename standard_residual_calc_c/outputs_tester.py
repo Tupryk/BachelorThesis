@@ -28,8 +28,8 @@ if __name__ == '__main__':
 	same = True
 	for i in range(len(c_output)):
 		for j in range(2):
+			print(c_output[i][j], py_output[i][j])
 			if np.abs(c_output[i][j]-py_output[i][j]) >= 1e-4:
-				print(c_output[i][j], py_output[i][j])
 				same = False
 				break
 		if not same:

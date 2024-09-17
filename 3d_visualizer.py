@@ -6,8 +6,8 @@ import LMCE.cfusdlog as cfusdlog
 from LMCE.residual_calculation import residual
 
 
-residual_func = lambda data: residual(data, is_brushless=False, has_payload=False, total_mass=.034)
-data_path = f"./crazyflie-data-collection/jana_flight_data/jana02"
+residual_func = lambda data: residual(data, is_brushless=False, has_payload=False, use_rpm=False, total_mass=.034)
+data_path = "./timescale7/cf21/nn/nn_log00"
 visual_scale = 1.
 
 fig = plt.figure()
