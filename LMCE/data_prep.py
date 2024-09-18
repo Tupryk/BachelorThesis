@@ -20,7 +20,7 @@ def feature_label_from_data(data: dict, residual_func):
         r.append(R[0])
 
     r = np.array(r)
-    k = np.array([data['acc.x'][start:], data['acc.y'][start:], data['acc.z'][start:], data['gyro.x'][start:], data['gyro.y'][start:],data['gyro.z'][start:]]).T
+    k = np.array([data['acc.x'][start:], data['acc.y'][start:], data['acc.z'][start:], data['gyro.x'][start:], data['gyro.y'][start:], data['gyro.z'][start:]]).T
     features = np.append(k, r, axis=1)
 
     f_a, tau_a = residual_func(data)
