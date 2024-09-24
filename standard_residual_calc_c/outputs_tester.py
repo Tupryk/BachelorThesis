@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	c_output = np.array(eval(c_output))
 
 	data = cfusdlog.decode(test_data_path)['fixedFrequency']
-	py_output, _ = residual(data, use_rpm=False)
+	py_output, _ = residual(data, use_rpm=False, total_mass=.0444, is_brushless=True)
 
 	same = True
 	for i in range(len(c_output)):

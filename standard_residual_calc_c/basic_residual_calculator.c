@@ -1,9 +1,22 @@
 #include "basic_residual_calculator.h"
 
+#define BRUSHLESS 1
+#if BRUSHLESS
+    #define QUADROTOR_MASS 0.0444f
+#else
+    #define QUADROTOR_MASS 0.0347f
+#endif
+
 float pwm_to_force(float pwm) {
-    float a = 0.00000000165049399f;
-    float b = 0.00009443961289999999f;
-    float c = -0.37774805200000000083f;
+    #if BRUSHLESS
+        float a = 0.0f;
+        float b = 0.0005492858445116151f;
+        float c = -5.360718677769569f;
+    #else
+        float a = 0.00000000165049399f;
+        float b = 0.00009443961289999999f;
+        float c = -0.37774805200000000083f;
+    #endif
     return pwm*pwm*a + pwm*b + c;
 }
 
