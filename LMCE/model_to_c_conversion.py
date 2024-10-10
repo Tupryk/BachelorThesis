@@ -36,9 +36,11 @@ def compare_outputs(c_output, py_output, err_thresh=1e-4):
         print("Something went wrong, outputs dont match!")
 
 
-def exportNet(pth_path):
+def exportNet(pth_path, info=""):
     gen_file = open(f'{PATH}nn.h', 'w')
     gen_file.write(f"// GENERATED FILE FROM MODEL {pth_path}\n")
+    if len(info):
+        gen_file.write(f"// Info: {info}\n")
     gen_file.write("#ifndef __GEN_NN__\n")
     gen_file.write("#define __GEN_NN__\n\n")
 
@@ -201,11 +203,13 @@ def tree_model_read(model_path):
     return model
 
 
-def exportTree(model_path):
+def exportTree(model_path, info=""):
     model = tree_model_read(model_path)
     
     gen_file = open(f"{PATH}tree.h", 'w')
     gen_file.write(f"// GENERATED FILE FROM MODEL {model_path}\n")
+    if len(info):
+        gen_file.write(f"// Info: {info}\n")
     gen_file.write("#ifndef __GEN_TREE__\n")
     gen_file.write("#define __GEN_TREE__\n\n")
 
