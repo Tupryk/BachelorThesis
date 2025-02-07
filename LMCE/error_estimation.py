@@ -3,11 +3,11 @@ from typing import List
 import matplotlib.pyplot as plt
 
 
-def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float], vis: bool = False) -> float:
+def error_calculator(real_pos: List[float], target_pos: List[float], cutoff_start: int=0, cutoff_end: int=-1, vis: bool = False) -> float:
     errors = []
 
-    x = real_pos[0][:cutoff]
-    y = real_pos[1][:cutoff]
+    x = real_pos[0][cutoff_start:cutoff_end]
+    y = real_pos[1][cutoff_start:cutoff_end]
 
     x_ = [target_pos[0][int(j/len(x)*len(target_pos[0]))]-x[j]
           for j, _, in enumerate(x)]
@@ -29,8 +29,11 @@ def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float]
         plt.plot(x, y, label="Real path")
         plt.quiver(origin[:, 0], origin[:, 1], vector[:, 0], vector[:, 1], angles='xy',
                    scale_units='xy', scale=1, color='r', alpha=.1, label="Deviation from flight path")
+        plt.xlabel("X position (m)")
+        plt.ylabel("Y position (m)")
         plt.axis('equal')
         plt.legend()
+        plt.savefig("error.png", dpi=600)
         plt.show()
 
     return error
@@ -39,14 +42,28 @@ def error_calculator(cutoff: int, real_pos: List[float], target_pos: List[float]
 def find_best_cutoff(real_pos: List[float], target_pos: List[float]) -> int:
     # Kind of slow, could be made nlogn
     smallest_error = np.inf
-    smallest_cutoff = -1
+    start_cutoff = 0
+    end_cutoff = -1
     current_error = 0
-    for cutoff in range(1000, len(real_pos[0])-100):
-        current_error = error_calculator(cutoff, real_pos, target_pos)
-        if smallest_error > current_error:
-            smallest_error = current_error
-            smallest_cutoff = cutoff
-    return smallest_cutoff
+
+    path_len = len(real_pos[0])
+
+    for _ in range(4):
+        smallest_error = np.inf
+        current_error = 0
+        for cutoff in range(0, path_len - path_len//3):
+            current_error = error_calculator(real_pos, target_pos, cutoff, end_cutoff)
+            if smallest_error > current_error:
+                smallest_error = current_error
+                start_cutoff = cutoff
+
+        for cutoff in range(len(real_pos[0]), path_len//3, -1):
+            current_error = error_calculator(real_pos, target_pos, start_cutoff, cutoff)
+            if smallest_error > current_error:
+                smallest_error = current_error
+                end_cutoff = cutoff
+
+    return start_cutoff, end_cutoff
 
 
 if __name__ == "__main__":
