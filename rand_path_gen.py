@@ -82,6 +82,11 @@ if __name__ == "__main__":
     ax.set_title('Natural 3D Path with Gradient')
     # plt.show()
 
+    scale = np.random.random()
+    yaw = np.sin(np.linspace(0, np.pi*2*scale, len(x))) * np.pi*2
+    # plt.plot(yaw)
+    # plt.show()
+
     import sys
     import os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'uav_trajectories/scripts')))
@@ -92,7 +97,7 @@ if __name__ == "__main__":
         f.write("t,x,y,z,yaw\n")
         ts = np.linspace(0, 10, len(x))
         for i, t in enumerate(ts):
-            f.write("{},{},{},{},{}\n".format(t, x[i], y[i], z[i], 0))
+            f.write("{},{},{},{},{}\n".format(t, x[i], y[i], z[i], yaw[i]))
     data = np.loadtxt("in.csv", delimiter=',', skiprows=1)
     traj = generate_trajectory(data, pieces)
     traj.savecsv("out.csv")
